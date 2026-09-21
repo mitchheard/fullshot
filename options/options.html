@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>FullShot Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <h1>FullShot</h1>
+
+    <section>
+      <h2>Default format</h2>
+      <label><input type="radio" name="defaultFormat" value="pdf" /> PDF</label>
+      <label><input type="radio" name="defaultFormat" value="image" /> Image</label>
+      <p class="hint">Used by Alt+Shift+S and the "default" popup action.</p>
+    </section>
+
+    <section>
+      <h2>PDF mode</h2>
+      <label><input type="radio" name="pdfMode" value="claude" /> Claude PDF (tiled, searchable text layer)</label>
+      <label><input type="radio" name="pdfMode" value="vector" /> Vector PDF (experimental, native print-to-PDF)</label>
+    </section>
+
+    <section>
+      <h2>Image format</h2>
+      <label><input type="radio" name="imageFormat" value="png" /> PNG</label>
+      <label><input type="radio" name="imageFormat" value="jpeg" /> JPEG</label>
+      <label id="jpeg-quality-row">
+        Quality
+        <input type="number" id="jpegQuality" min="1" max="100" step="1" />
+      </label>
+      <p class="hint">The clipboard copy is always PNG — some browsers can't paste JPEG.</p>
+    </section>
+
+    <section>
+      <h2>Saving</h2>
+      <label class="block">
+        Base folder name (inside Downloads)
+        <input type="text" id="baseFolder" />
+      </label>
+
+      <label><input type="radio" name="subfolders" value="none" /> No subfolders</label>
+      <label><input type="radio" name="subfolders" value="month" /> By month</label>
+      <label><input type="radio" name="subfolders" value="domain" /> By domain</label>
+
+      <label><input type="checkbox" id="alsoSaveTiles" /> Also save Claude-sized tiles (Image mode)</label>
+    </section>
+
+    <section>
+      <h2>Filename</h2>
+      <label><input type="radio" name="filenamePreset" value="domain_date_title" /> domain_date_title</label>
+      <label><input type="radio" name="filenamePreset" value="title_date" /> title_date</label>
+      <label><input type="radio" name="filenamePreset" value="date_domain" /> date_domain</label>
+      <label><input type="radio" name="filenamePreset" value="custom" /> Custom</label>
+
+      <label class="block" id="custom-template-row">
+        Template
+        <input type="text" id="customTemplate" />
+        <span class="hint">Tokens: {domain} {title} {date} {time}</span>
+      </label>
+    </section>
+
+    <p class="preview">Example: <code id="preview"></code></p>
+    <p id="saved-indicator" class="saved-indicator"></p>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
