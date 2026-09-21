@@ -5,6 +5,7 @@
 // in the service worker against that URL.
 
 import { sendToOffscreen } from "./offscreen-client.js";
+import { uint8ArrayToBase64 } from "./util.js";
 
 function waitForDownloadSettled(downloadId) {
   return new Promise((resolve, reject) => {
@@ -40,7 +41,7 @@ export async function saveBlob(blob, relativePath) {
   const buffer = await blob.arrayBuffer();
   const { url } = await sendToOffscreen({
     type: "create-object-url",
-    buffer,
+    base64: uint8ArrayToBase64(new Uint8Array(buffer)),
     mimeType: blob.type || "application/octet-stream",
   });
 
