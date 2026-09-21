@@ -89,3 +89,70 @@ export async function preScrollPage() {
   await wait(50);
   return true;
 }
+
+// Self-contained, like the others above. Many app-shell layouts (SPA
+// dashboards, docs sites with a fixed header/sidebar) don't scroll the
+// document at all — a single inner pane does, with its own
+// `overflow: auto` and a fixed height. Page.getLayoutMetrics() only
+// measures the outer document, so without this, capture only ever
+// sees one screenful of that inner pane.
+//
+// This temporarily strips the CSS clipping off any large-enough
+// internally-scrolling element so its true content height becomes
+// part of the document's normal layout flow (and therefore part of
+// what CDP considers "the page"), tagging what it changed so
+// restoreScrollContainers() can put it back exactly afterward.
+export function unclipScrollContainers() {
+  const MARK = "data-fullshot-unclip";
+  const SKIP_TAGS = new Set(["TEXTAREA", "SELECT", "INPUT", "IFRAME"]);
+  const minHeight = window.innerHeight * 0.3;
+
+  const candidates = document.querySelectorAll("body *");
+  let count = 0;
+
+  for (const el of candidates) {
+    if (SKIP_TAGS.has(el.tagName)) continue;
+    if (el.clientHeight < minHeight) continue;
+
+    const style = window.getComputedStyle(el);
+    const clipsY = style.overflowY === "auto" || style.overflowY === "scroll";
+    const clipsX = style.overflowX === "auto" || style.overflowX === "scroll";
+    if (!clipsY && !clipsX) continue;
+
+    const overflowsVertically = el.scrollHeight - el.clientHeight > 4;
+    const overflowsHorizontally = el.scrollWidth - el.clientWidth > 4;
+    if (!overflowsVertically && !overflowsHorizontally) continue;
+
+    el.setAttribute(`${MARK}-overflow`, el.style.overflow || "");
+    el.setAttribute(`${MARK}-overflow-y`, el.style.overflowY || "");
+    el.setAttribute(`${MARK}-overflow-x`, el.style.overflowX || "");
+    el.setAttribute(`${MARK}-height`, el.style.height || "");
+    el.setAttribute(`${MARK}-max-height`, el.style.maxHeight || "");
+    el.setAttribute(MARK, "1");
+
+    el.style.setProperty("overflow", "visible", "important");
+    el.style.setProperty("height", "auto", "important");
+    el.style.setProperty("max-height", "none", "important");
+    count++;
+  }
+
+  return count;
+}
+
+export function restoreScrollContainers() {
+  const MARK = "data-fullshot-unclip";
+  const marked = document.querySelectorAll(`[${MARK}]`);
+
+  for (const el of marked) {
+    el.style.overflow = el.getAttribute(`${MARK}-overflow`) || "";
+    el.style.overflowY = el.getAttribute(`${MARK}-overflow-y`) || "";
+    el.style.overflowX = el.getAttribute(`${MARK}-overflow-x`) || "";
+    el.style.height = el.getAttribute(`${MARK}-height`) || "";
+    el.style.maxHeight = el.getAttribute(`${MARK}-max-height`) || "";
+    for (const suffix of ["", "-overflow", "-overflow-y", "-overflow-x", "-height", "-max-height"]) {
+      el.removeAttribute(`${MARK}${suffix}`);
+    }
+  }
+
+  return marked.length;
+}

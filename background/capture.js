@@ -4,7 +4,12 @@
 // what avoids repeated sticky/fixed headers, unlike naive
 // scroll-and-screenshot approaches).
 
-import { preScrollPage, collectVisibleTextNodes } from "../content/text-extractor.js";
+import {
+  preScrollPage,
+  collectVisibleTextNodes,
+  unclipScrollContainers,
+  restoreScrollContainers,
+} from "../content/text-extractor.js";
 
 const PROTOCOL_VERSION = "1.3";
 const SEGMENT_MAX_CSS_HEIGHT = 4000; // conservative, well under CDP's clip limits
@@ -62,7 +67,15 @@ async function withDebugger(tabId, fn) {
     await sendCommand(tabId, "Page.enable", {});
     // Trigger lazy-loaded content, then settle back at the original scroll spot.
     await runInPage(tabId, `(${preScrollPage.toString()})()`, { awaitPromise: true });
-    return await fn();
+    // Strip clipping off internally-scrolling panes (app-shell layouts,
+    // dashboards) so their real content height joins the document's
+    // layout — otherwise Page.getLayoutMetrics only sees one viewport.
+    await runInPage(tabId, `(${unclipScrollContainers.toString()})()`);
+    try {
+      return await fn();
+    } finally {
+      await runInPage(tabId, `(${restoreScrollContainers.toString()})()`).catch(() => {});
+    }
   } finally {
     await detach(tabId);
   }

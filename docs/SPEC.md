@@ -24,6 +24,7 @@ Private Chrome MV3 extension "FullShot". Plain JS, no build step. pdf-lib is ven
 * Captured in fixed-height (4000 CSS px) clip segments regardless of total page height, then stitched on an `OffscreenCanvas` in the background service worker — this uniformly handles pages taller than Chrome's capture limit (~16k px) without special-casing.
 * Because `captureBeyondViewport` renders the page as laid out (not by scrolling + re-screenshotting the visible viewport), fixed/sticky elements are captured once at their normal flow position rather than duplicated per segment.
 * If DPR > 1, each capture segment's `clip.scale` is set to `1/DPR` so tiled/stitched output is 1:1 with CSS pixels instead of native device pixels.
+* Deviation, found during testing: many app-shell layouts (SPA dashboards, docs sites) don't scroll the document at all — an inner pane does, with its own `overflow: auto` and a fixed height, so `Page.getLayoutMetrics()` only ever measures one viewport. Before measuring/capturing, any large-enough internally-scrolling element gets `overflow`/`height`/`max-height` forcibly overridden (tagged so it can be restored byte-for-byte afterward) so its real content height joins the document's normal layout flow. Known remaining gap: **virtualized/windowed lists** (rows that don't exist in the DOM until scrolled into view) can't be fixed this way — there's nothing to un-clip because the content genuinely isn't there yet. That would need actually scrolling the inner container step-by-step, which isn't implemented in v1.
 
 **Triggers**
 
