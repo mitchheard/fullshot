@@ -1,9 +1,9 @@
 // Runs inside the extension's offscreen document — the only place
-// with a real document context, needed for navigator.clipboard.write()
-// and for URL.createObjectURL() (neither exists in the service
-// worker), so both clipboard writes and downloads happen here.
-
-import { performDownload } from "../background/download-core.js";
+// with a real document context. It does two things the service worker
+// can't: write to the clipboard, and create a blob: URL (via
+// URL.createObjectURL). chrome.downloads isn't available from an
+// offscreen document, so the actual download call happens back in the
+// service worker using the URL this hands it.
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.target !== "offscreen") return false;
@@ -21,15 +21,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === "save-download") {
-    (async () => {
-      try {
-        const downloadId = await performDownload(message);
-        sendResponse({ ok: true, downloadId });
-      } catch (err) {
-        sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
-      }
-    })();
+  if (message.type === "create-object-url") {
+    try {
+      const blob = new Blob([message.buffer], { type: message.mimeType });
+      const url = URL.createObjectURL(blob);
+      sendResponse({ ok: true, url });
+    } catch (err) {
+      sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
+    }
+    return true;
+  }
+
+  if (message.type === "revoke-object-url") {
+    try {
+      URL.revokeObjectURL(message.url);
+      sendResponse({ ok: true });
+    } catch (err) {
+      sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
+    }
     return true;
   }
 

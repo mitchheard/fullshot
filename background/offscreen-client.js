@@ -9,7 +9,7 @@ export async function ensureOffscreenDocument() {
     await chrome.offscreen.createDocument({
       url: OFFSCREEN_URL,
       reasons: ["CLIPBOARD", "BLOBS"],
-      justification: "Write captured screenshots to the clipboard and save them via chrome.downloads.",
+      justification: "Write captured screenshots to the clipboard and mint blob: URLs for downloads.",
     });
   } catch (err) {
     const message = String(err && err.message ? err.message : err);
