@@ -2,9 +2,11 @@
 
 Private, unpacked Chrome extension for full-page captures — a self-hosted replacement for GoFullPage that makes **zero network requests** and needs no `host_permissions` on any site.
 
-- **Alt+Shift+S** — capture the current page in your default format (PDF by default)
-- **Alt+Shift+I** — capture the current page as an image
+- **Alt+Shift+S** (Windows/Linux) / **Cmd+Shift+S** (Mac) — capture the current page in your default format (PDF by default)
+- **Alt+Shift+I** (Windows/Linux) / **Cmd+Shift+I** (Mac) — capture the current page as an image
 - Toolbar icon → popup with "PDF" / "Image" buttons and a gear to open options
+
+If a shortcut doesn't fire, check `chrome://extensions/shortcuts` — Chrome sometimes keeps whatever was assigned when the extension was first loaded rather than picking up a manifest change automatically; reassign it there if needed.
 
 PDF captures default to **Claude PDF** mode: the page is tiled into ~1440×2400 pages with an invisible, searchable text layer, sized so each page arrives readable when Claude downsizes it — see [docs/SPEC.md](docs/SPEC.md) for the full design.
 

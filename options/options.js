@@ -66,11 +66,12 @@ async function onChange() {
   updateVisibility(options);
   updatePreview(options);
   await setOptions(options);
-  el.saved.textContent = "Saved";
+  el.saved.textContent = "✓ Saved";
+  el.saved.classList.add("visible");
   clearTimeout(savedIndicatorTimer);
   savedIndicatorTimer = setTimeout(() => {
-    el.saved.textContent = "";
-  }, 1200);
+    el.saved.classList.remove("visible");
+  }, 1600);
 }
 
 document.querySelectorAll("input").forEach((input) => {

@@ -20,11 +20,11 @@
   "options_page": "options/options.html",
   "commands": {
     "capture-default": {
-      "suggested_key": { "default": "Alt+Shift+S" },
+      "suggested_key": { "default": "Alt+Shift+S", "mac": "Command+Shift+S" },
       "description": "Capture full page (default format)"
     },
     "capture-image": {
-      "suggested_key": { "default": "Alt+Shift+I" },
+      "suggested_key": { "default": "Alt+Shift+I", "mac": "Command+Shift+I" },
       "description": "Capture full page as image"
     }
   },
