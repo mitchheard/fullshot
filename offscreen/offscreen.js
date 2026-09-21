@@ -1,20 +1,37 @@
-// Runs inside the extension's offscreen document. Its only job is
-// writing image bytes to the system clipboard, since
-// navigator.clipboard.write() needs a document context that a
-// service worker doesn't have.
+// Runs inside the extension's offscreen document — the only place
+// with a real document context, needed for navigator.clipboard.write()
+// and for URL.createObjectURL() (neither exists in the service
+// worker), so both clipboard writes and downloads happen here.
+
+import { performDownload } from "../background/download-core.js";
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.target !== "offscreen" || message.type !== "write-clipboard") return false;
+  if (message?.target !== "offscreen") return false;
 
-  (async () => {
-    try {
-      const blob = new Blob([message.buffer], { type: message.mimeType });
-      await navigator.clipboard.write([new ClipboardItem({ [message.mimeType]: blob })]);
-      sendResponse({ ok: true });
-    } catch (err) {
-      sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
-    }
-  })();
+  if (message.type === "write-clipboard") {
+    (async () => {
+      try {
+        const blob = new Blob([message.buffer], { type: message.mimeType });
+        await navigator.clipboard.write([new ClipboardItem({ [message.mimeType]: blob })]);
+        sendResponse({ ok: true });
+      } catch (err) {
+        sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
+      }
+    })();
+    return true;
+  }
 
-  return true; // keep the message channel open for the async sendResponse
+  if (message.type === "save-download") {
+    (async () => {
+      try {
+        const downloadId = await performDownload(message);
+        sendResponse({ ok: true, downloadId });
+      } catch (err) {
+        sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
+      }
+    })();
+    return true;
+  }
+
+  return false;
 });

@@ -46,7 +46,7 @@ Private Chrome MV3 extension "FullShot". Plain JS, no build step. pdf-lib is ven
 **Saving**
 
 * Path: `Downloads/<base>/<subfolder>/<domain>_<YYYYMMDD-HHmm>_<title-slug>.<ext>` (slug: lowercase, hyphens, max 50 chars, diacritics stripped, path-traversal-safe).
-* `chrome.downloads.download` with `saveAs:false`, `conflictAction:'uniquify'`.
+* `chrome.downloads.download` with `saveAs:false`, `conflictAction:'uniquify'`. The actual call happens inside the offscreen document, not the service worker — `URL.createObjectURL()` doesn't exist in a service worker context, only in a real document, so the offscreen document (already needed for clipboard writes) also owns turning a Blob into a downloadable `blob:` URL.
 * Toolbar badge gives lightweight feedback ("…" while capturing, "✓"/"✗" after) instead of a native notification, since `notifications` wasn't in the requested permission set.
 * Known caveat (matches the ticket's own note): if Chrome's global "Ask where to save each file" setting is on, Chrome shows the Save As dialog regardless of `saveAs:false` — this is a Chrome-level override the extension can't suppress.
 
