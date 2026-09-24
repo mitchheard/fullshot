@@ -123,7 +123,7 @@ export function unclipScrollContainers() {
     return true;
   }
 
-  const candidates = document.querySelectorAll("body *");
+  const candidates = document.querySelectorAll("*");
   let count = 0;
 
   for (const el of candidates) {
