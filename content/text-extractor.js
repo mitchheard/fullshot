@@ -144,10 +144,17 @@ export function unclipScrollContainers() {
     // A flex/grid app shell commonly constrains this element's *ancestors*
     // too (a fixed-height or overflow:hidden wrapper one or more levels
     // up) — freeing only the scrollable element itself still leaves it
-    // squeezed into that ancestor's box, so walk up and free those too.
+    // squeezed into that ancestor's box, so walk all the way up and free
+    // those too. This has to include <body>/<html> themselves: a
+    // `html, body { height: 100vh; overflow: hidden }` reset is an
+    // extremely common pattern and is exactly the kind of clip that
+    // needs removing — Page.getLayoutMetrics() measures the document's
+    // rendered content box, which stays capped at one viewport as long
+    // as anything from the scrollable element up to <html> still clips.
     let ancestor = el.parentElement;
-    while (ancestor && ancestor !== document.body) {
+    while (ancestor) {
       if (markAndUnclip(ancestor)) count++;
+      if (ancestor === document.documentElement) break;
       ancestor = ancestor.parentElement;
     }
   }
