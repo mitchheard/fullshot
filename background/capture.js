@@ -67,6 +67,24 @@ async function withDebugger(tabId, fn) {
     await sendCommand(tabId, "Page.enable", {});
     // Trigger lazy-loaded content, then settle back at the original scroll spot.
     await runInPage(tabId, `(${preScrollPage.toString()})()`, { awaitPromise: true });
+    // TEMPORARY: same broad query as the manual devtools diagnostic that
+    // found claude.ai's chat pane, run from inside the actual capture
+    // flow, to check whether the environment differs from manual testing.
+    const broadDiagnostic = await runInPage(
+      tabId,
+      `[...document.querySelectorAll('*')].filter(el => {
+        const s = getComputedStyle(el);
+        return (el.scrollHeight - el.clientHeight > 50) && el.clientHeight > window.innerHeight * 0.2;
+      }).map(el => ({
+        tag: el.tagName,
+        cls: (el.className + '').slice(0, 60),
+        overflowY: getComputedStyle(el).overflowY,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+      }))`
+    );
+    console.log("FullShot: broad diagnostic (matches manual snippet):", broadDiagnostic);
+
     // Strip clipping off internally-scrolling panes (app-shell layouts,
     // dashboards) so their real content height joins the document's
     // layout — otherwise Page.getLayoutMetrics only sees one viewport.
