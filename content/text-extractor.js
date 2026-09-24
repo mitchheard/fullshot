@@ -107,6 +107,22 @@ export function unclipScrollContainers() {
   const SKIP_TAGS = new Set(["TEXTAREA", "SELECT", "INPUT", "IFRAME"]);
   const minHeight = window.innerHeight * 0.3;
 
+  function markAndUnclip(el) {
+    if (el.hasAttribute(MARK)) return false; // already handled (shared ancestor)
+
+    el.setAttribute(`${MARK}-overflow`, el.style.overflow || "");
+    el.setAttribute(`${MARK}-overflow-y`, el.style.overflowY || "");
+    el.setAttribute(`${MARK}-overflow-x`, el.style.overflowX || "");
+    el.setAttribute(`${MARK}-height`, el.style.height || "");
+    el.setAttribute(`${MARK}-max-height`, el.style.maxHeight || "");
+    el.setAttribute(MARK, "1");
+
+    el.style.setProperty("overflow", "visible", "important");
+    el.style.setProperty("height", "auto", "important");
+    el.style.setProperty("max-height", "none", "important");
+    return true;
+  }
+
   const candidates = document.querySelectorAll("body *");
   let count = 0;
 
@@ -123,17 +139,17 @@ export function unclipScrollContainers() {
     const overflowsHorizontally = el.scrollWidth - el.clientWidth > 4;
     if (!overflowsVertically && !overflowsHorizontally) continue;
 
-    el.setAttribute(`${MARK}-overflow`, el.style.overflow || "");
-    el.setAttribute(`${MARK}-overflow-y`, el.style.overflowY || "");
-    el.setAttribute(`${MARK}-overflow-x`, el.style.overflowX || "");
-    el.setAttribute(`${MARK}-height`, el.style.height || "");
-    el.setAttribute(`${MARK}-max-height`, el.style.maxHeight || "");
-    el.setAttribute(MARK, "1");
+    if (markAndUnclip(el)) count++;
 
-    el.style.setProperty("overflow", "visible", "important");
-    el.style.setProperty("height", "auto", "important");
-    el.style.setProperty("max-height", "none", "important");
-    count++;
+    // A flex/grid app shell commonly constrains this element's *ancestors*
+    // too (a fixed-height or overflow:hidden wrapper one or more levels
+    // up) — freeing only the scrollable element itself still leaves it
+    // squeezed into that ancestor's box, so walk up and free those too.
+    let ancestor = el.parentElement;
+    while (ancestor && ancestor !== document.body) {
+      if (markAndUnclip(ancestor)) count++;
+      ancestor = ancestor.parentElement;
+    }
   }
 
   return count;
