@@ -107,19 +107,37 @@ export function unclipScrollContainers() {
   const SKIP_TAGS = new Set(["TEXTAREA", "SELECT", "INPUT", "IFRAME"]);
   const minHeight = window.innerHeight * 0.3;
 
+  const STYLE_PROPS = [
+    "overflow",
+    "overflow-y",
+    "overflow-x",
+    "height",
+    "max-height",
+    "position",
+    "top",
+    "bottom",
+    "inset",
+  ];
+
   function markAndUnclip(el) {
     if (el.hasAttribute(MARK)) return false; // already handled (shared ancestor)
 
-    el.setAttribute(`${MARK}-overflow`, el.style.overflow || "");
-    el.setAttribute(`${MARK}-overflow-y`, el.style.overflowY || "");
-    el.setAttribute(`${MARK}-overflow-x`, el.style.overflowX || "");
-    el.setAttribute(`${MARK}-height`, el.style.height || "");
-    el.setAttribute(`${MARK}-max-height`, el.style.maxHeight || "");
+    for (const prop of STYLE_PROPS) {
+      el.setAttribute(`${MARK}-${prop}`, el.style.getPropertyValue(prop) || "");
+    }
     el.setAttribute(MARK, "1");
 
     el.style.setProperty("overflow", "visible", "important");
     el.style.setProperty("height", "auto", "important");
     el.style.setProperty("max-height", "none", "important");
+
+    // position:fixed/absolute elements sized via top+bottom (or inset)
+    // compute their height from those offsets, not from the `height`
+    // property — overriding height alone does nothing for them.
+    const computedPosition = window.getComputedStyle(el).position;
+    if (computedPosition === "fixed" || computedPosition === "absolute") {
+      el.style.setProperty("position", "static", "important");
+    }
     return true;
   }
 
@@ -173,17 +191,30 @@ export function unclipScrollContainers() {
 
 export function restoreScrollContainers() {
   const MARK = "data-fullshot-unclip";
+  const STYLE_PROPS = [
+    "overflow",
+    "overflow-y",
+    "overflow-x",
+    "height",
+    "max-height",
+    "position",
+    "top",
+    "bottom",
+    "inset",
+  ];
   const marked = document.querySelectorAll(`[${MARK}]`);
 
   for (const el of marked) {
-    el.style.overflow = el.getAttribute(`${MARK}-overflow`) || "";
-    el.style.overflowY = el.getAttribute(`${MARK}-overflow-y`) || "";
-    el.style.overflowX = el.getAttribute(`${MARK}-overflow-x`) || "";
-    el.style.height = el.getAttribute(`${MARK}-height`) || "";
-    el.style.maxHeight = el.getAttribute(`${MARK}-max-height`) || "";
-    for (const suffix of ["", "-overflow", "-overflow-y", "-overflow-x", "-height", "-max-height"]) {
-      el.removeAttribute(`${MARK}${suffix}`);
+    for (const prop of STYLE_PROPS) {
+      const original = el.getAttribute(`${MARK}-${prop}`) || "";
+      if (original) {
+        el.style.setProperty(prop, original);
+      } else {
+        el.style.removeProperty(prop);
+      }
+      el.removeAttribute(`${MARK}-${prop}`);
     }
+    el.removeAttribute(MARK);
   }
 
   return marked.length;

@@ -85,6 +85,40 @@ async function withDebugger(tabId, fn) {
     );
     console.log("FullShot: broad diagnostic (matches manual snippet):", broadDiagnostic);
 
+    // TEMPORARY: trace the ancestor chain of the biggest-overflow
+    // candidate, with each ancestor's computed position/height/top/
+    // bottom/overflow — tells us definitively what's still constraining
+    // it before unclipScrollContainers touches anything.
+    const ancestorTrace = await runInPage(
+      tabId,
+      `(() => {
+        const candidates = [...document.querySelectorAll('*')].filter(el => {
+          return el.scrollHeight - el.clientHeight > 50 && el.clientHeight > window.innerHeight * 0.2;
+        });
+        candidates.sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight));
+        const target = candidates[0];
+        if (!target) return { found: false };
+        const trace = [];
+        let el = target;
+        while (el) {
+          const s = getComputedStyle(el);
+          trace.push({
+            tag: el.tagName,
+            cls: (el.className + '').slice(0, 60),
+            position: s.position,
+            height: s.height,
+            top: s.top,
+            bottom: s.bottom,
+            overflow: s.overflow + '/' + s.overflowY,
+          });
+          if (el === document.body) break;
+          el = el.parentElement;
+        }
+        return { found: true, trace };
+      })()`
+    );
+    console.log("FullShot: ancestor trace of biggest-overflow candidate:", ancestorTrace);
+
     // Strip clipping off internally-scrolling panes (app-shell layouts,
     // dashboards) so their real content height joins the document's
     // layout — otherwise Page.getLayoutMetrics only sees one viewport.
