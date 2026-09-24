@@ -67,58 +67,6 @@ async function withDebugger(tabId, fn) {
     await sendCommand(tabId, "Page.enable", {});
     // Trigger lazy-loaded content, then settle back at the original scroll spot.
     await runInPage(tabId, `(${preScrollPage.toString()})()`, { awaitPromise: true });
-    // TEMPORARY: same broad query as the manual devtools diagnostic that
-    // found claude.ai's chat pane, run from inside the actual capture
-    // flow, to check whether the environment differs from manual testing.
-    const broadDiagnostic = await runInPage(
-      tabId,
-      `[...document.querySelectorAll('*')].filter(el => {
-        const s = getComputedStyle(el);
-        return (el.scrollHeight - el.clientHeight > 50) && el.clientHeight > window.innerHeight * 0.2;
-      }).map(el => ({
-        tag: el.tagName,
-        cls: (el.className + '').slice(0, 60),
-        overflowY: getComputedStyle(el).overflowY,
-        scrollHeight: el.scrollHeight,
-        clientHeight: el.clientHeight,
-      }))`
-    );
-    console.log("FullShot: broad diagnostic (matches manual snippet):", broadDiagnostic);
-
-    // TEMPORARY: trace the ancestor chain of the biggest-overflow
-    // candidate, with each ancestor's computed position/height/top/
-    // bottom/overflow — tells us definitively what's still constraining
-    // it before unclipScrollContainers touches anything.
-    const ancestorTrace = await runInPage(
-      tabId,
-      `(() => {
-        const candidates = [...document.querySelectorAll('*')].filter(el => {
-          return el.scrollHeight - el.clientHeight > 50 && el.clientHeight > window.innerHeight * 0.2;
-        });
-        candidates.sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight));
-        const target = candidates[0];
-        if (!target) return { found: false };
-        const trace = [];
-        let el = target;
-        while (el) {
-          const s = getComputedStyle(el);
-          trace.push({
-            tag: el.tagName,
-            cls: (el.className + '').slice(0, 60),
-            position: s.position,
-            height: s.height,
-            top: s.top,
-            bottom: s.bottom,
-            overflow: s.overflow + '/' + s.overflowY,
-          });
-          if (el === document.body) break;
-          el = el.parentElement;
-        }
-        return { found: true, trace };
-      })()`
-    );
-    console.log("FullShot: ancestor trace of biggest-overflow candidate:", ancestorTrace);
-
     // Strip clipping off internally-scrolling panes (app-shell layouts,
     // dashboards) so their real content height joins the document's
     // layout — otherwise Page.getLayoutMetrics only sees one viewport.
