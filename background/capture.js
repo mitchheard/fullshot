@@ -70,8 +70,8 @@ async function withDebugger(tabId, fn) {
     // Strip clipping off internally-scrolling panes (app-shell layouts,
     // dashboards) so their real content height joins the document's
     // layout — otherwise Page.getLayoutMetrics only sees one viewport.
-    const unclippedCount = await runInPage(tabId, `(${unclipScrollContainers.toString()})()`);
-    console.log(`FullShot: unclipped ${unclippedCount} element(s)`);
+    const unclipResult = await runInPage(tabId, `(${unclipScrollContainers.toString()})()`);
+    console.log(`FullShot: unclipped ${unclipResult.count} element(s), primary matches:`, unclipResult.primaryMatches);
     try {
       return await fn();
     } finally {

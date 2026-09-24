@@ -125,6 +125,7 @@ export function unclipScrollContainers() {
 
   const candidates = document.querySelectorAll("*");
   let count = 0;
+  const primaryMatches = [];
 
   for (const el of candidates) {
     if (SKIP_TAGS.has(el.tagName)) continue;
@@ -138,6 +139,14 @@ export function unclipScrollContainers() {
     const overflowsVertically = el.scrollHeight - el.clientHeight > 4;
     const overflowsHorizontally = el.scrollWidth - el.clientWidth > 4;
     if (!overflowsVertically && !overflowsHorizontally) continue;
+
+    primaryMatches.push({
+      tag: el.tagName,
+      cls: (el.className + "").slice(0, 60),
+      overflowY: style.overflowY,
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    });
 
     if (markAndUnclip(el)) count++;
 
@@ -159,7 +168,7 @@ export function unclipScrollContainers() {
     }
   }
 
-  return count;
+  return { count, primaryMatches };
 }
 
 export function restoreScrollContainers() {
