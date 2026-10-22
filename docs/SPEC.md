@@ -1,22 +1,20 @@
-# FullShot — full-page capture extension (v1)
+# fullshot — design notes (v1)
 
-_Mirrored from [AVIDX-371](https://linear.app/avidx/issue/AVIDX-371/fullshot-full-page-capture-extension-v1). Source of truth is the Linear issue; update this file if the issue changes._
+Design decisions and the reasoning behind them. For install and usage, see the [README](../README.md).
 
 ## Why
 
-Replace GoFullPage for daily full-page captures (dozens/day, mostly sent to Claude). GoFullPage requires "read and change all data on all websites" on every page. A self-built, unpacked extension with no network access removes that risk.
+fullshot started as a replacement for GoFullPage for frequent full-page captures, many of them sent to Claude. GoFullPage requires "read and change all data on all websites" on every page; a self-built extension with no host permissions and no network access removes that risk.
 
-Key finding driving the design: Claude downsizes images to max 2576px on the long edge (~4784 visual tokens). A tall single-image capture (e.g. 1440×10,000) arrives ~370px wide — unreadable. So captures for Claude must be **tiled (~1440×2400 per tile)**, and PDFs should carry a **real text layer**.
+The design premise: Claude downsizes images to max 2576px on the long edge, so a tall single-image capture (e.g. 1440×10,000) arrives unreadably small. Captures meant for Claude therefore work better **tiled (~1440×2400 per tile)**, and PDFs should carry a **real text layer**. In practice this matters most for image-only output; Claude reads a PDF's embedded text directly, which is why the single-page Vector PDF mode (below) works well too.
 
-Personal tooling — not a portfolio bet (yet). Build for Mitch first; load unpacked, never published.
+## What it is
 
-## What was built (Claude Code)
-
-Private Chrome MV3 extension "FullShot". Plain JS, no build step. pdf-lib is vendored locally as a UMD bundle (`lib/pdf-lib.min.js`) — no CDN, no network requests anywhere at runtime.
+A Chrome MV3 extension named "fullshot". Plain JS, no build step. pdf-lib is vendored locally as a UMD bundle (`lib/pdf-lib.min.js`) — no CDN, no network requests anywhere at runtime.
 
 **Permissions:** `activeTab`, `debugger`, `clipboardWrite`, `offscreen`, `downloads`, `storage`. No `host_permissions`.
 
-> Deviation from the ticket's permission list: `storage` was added (for persisting options via `chrome.storage.local`) and `scripting` was deliberately **not** added — in-page code (pre-scroll, text-node extraction) runs through `chrome.debugger`'s `Runtime.evaluate` instead of `chrome.scripting.executeScript`, since the debugger connection is already open for the capture itself. Neither permission grants any host access or triggers an install warning.
+> Notes on the permission set: `storage` is used for persisting options via `chrome.storage.local`, and `scripting` is deliberately **not** requested — in-page code (pre-scroll, text-node extraction) runs through `chrome.debugger`'s `Runtime.evaluate` instead of `chrome.scripting.executeScript`, since the debugger connection is already open for the capture itself. Neither permission grants any host access or triggers an install warning.
 
 **Capture**
 
@@ -51,30 +49,30 @@ Diagnosed on claude.ai's own chat panel (an 18-level-deep ancestor chain) that o
 * Path: `Downloads/<base>/<subfolder>/<domain>_<YYYYMMDD-HHmm>_<title-slug>.<ext>` (slug: lowercase, hyphens, max 50 chars, diacritics stripped, path-traversal-safe).
 * `chrome.downloads.download` with `saveAs:false`, `conflictAction:'uniquify'`. `URL.createObjectURL()` doesn't exist in a service worker context, only in a real document, so the offscreen document (already needed for clipboard writes) mints the `blob:` URL from the captured bytes and hands the URL string back — but `chrome.downloads` itself isn't available *inside* the offscreen document, so the actual `chrome.downloads.download()` call and its completion tracking still run in the service worker, against that URL.
 * Toolbar badge gives lightweight feedback ("…" while capturing, "✓"/"✗" after) instead of a native notification, since `notifications` wasn't in the requested permission set.
-* Known caveat (matches the ticket's own note): if Chrome's global "Ask where to save each file" setting is on, Chrome shows the Save As dialog regardless of `saveAs:false` — this is a Chrome-level override the extension can't suppress.
+* Known caveat: if Chrome's global "Ask where to save each file" setting is on, Chrome shows the Save As dialog regardless of `saveAs:false` — this is a Chrome-level override the extension can't suppress.
 
 **Options page**
 
 All fields from the spec: default format, PDF mode, image format (+ JPEG quality), base folder name, subfolders (none/month/domain), filename preset (including custom template with `{domain} {title} {date} {time}` tokens), "also save Claude-sized tiles", and a live example-filename preview. Options auto-save on change (no separate Save button) and persist via `chrome.storage.local`.
 
-## Acceptance criteria
+## Status
 
-- [ ] Alt+Shift+S saves a Claude PDF of the current page to the dated folder, no dialog
-- [ ] PDF text is selectable/searchable; pages are tiles, not one giant page
-- [ ] Alt+Shift+I saves a PNG and it's on the clipboard, pasteable into claude.ai
-- [ ] Popup PDF / Image buttons work
-- [ ] Lazy-loaded images render; no repeated sticky headers
+Checked by hand on a dashboard SPA and on claude.ai's chat UI, in both PDF modes.
+
+- [x] Claude PDF saves to the configured folder (no dialog, unless Chrome's own "ask where to save" setting is on)
+- [x] Pages are tiles, not one giant page; no repeated sticky headers
+- [x] Popup PDF button works
+- [x] Options persist and change naming/folders as expected
+- [x] No network calls anywhere in the shipped code (verified statically; confirming in the service worker's Network tab is a good extra check)
+- [ ] Cmd/Alt+Shift+I saves a PNG and puts it on the clipboard, pasteable into claude.ai
+- [ ] Lazy-loaded images render on a long article
 - [ ] Pages >16k px capture correctly
-- [ ] Options persist and change naming/folders as expected
-- [ ] Zero network requests (verify in the extension's DevTools)
-- [ ] Mode B tested vs Mode A on Mitch's ~10 most-captured sites; pick default
+- [ ] Vector PDF vs Claude PDF compared across a wider set of sites to pick the default
 
-These need manual verification in real Chrome (see README) — an automated agent can't drive `chrome://extensions`, grant the debugger permission dialog, or inspect the system clipboard.
-
-## Later (not in v1 — new tickets if pursued)
+## Ideas for later
 
 * Make `debugger` an optional permission requested on first capture + scroll-and-stitch fallback (`captureVisibleTab`) for users who decline.
-* Local MCP server exposing `latest_capture` (tiles + text) for Claude Desktop / Claude Code.
+* Local MCP server exposing the latest capture (tiles + text) to Claude Desktop / Claude Code.
 * Copy page as markdown alongside the capture.
-* Hand unpacked build to 3–5 heavy screenshot users; if still used after 2 weeks → Web Store listing + label + portfolio entry.
+* Gauge outside interest; a Web Store listing would first need the optional-`debugger` rework above.
 * Check whether Claude in Chrome already covers the "ask Claude about this page" case.

@@ -73,7 +73,7 @@ export function buildBaseFilename(options, tokens) {
 }
 
 export function buildRelativePath(options, tokens, ext) {
-  const parts = [sanitizeSegment(options.baseFolder || "FullShot")];
+  const parts = [sanitizeSegment(options.baseFolder || "fullshot")];
 
   if (options.subfolders === "month") {
     parts.push(sanitizeSegment(tokens.yearMonth));

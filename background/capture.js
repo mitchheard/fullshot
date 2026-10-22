@@ -71,7 +71,7 @@ async function withDebugger(tabId, fn) {
     // dashboards) so their real content height joins the document's
     // layout — otherwise Page.getLayoutMetrics only sees one viewport.
     const unclipResult = await runInPage(tabId, `(${unclipScrollContainers.toString()})()`);
-    console.log(`FullShot: unclipped ${unclipResult.count} element(s), primary matches:`, unclipResult.primaryMatches);
+    console.log(`fullshot: unclipped ${unclipResult.count} element(s), primary matches:`, unclipResult.primaryMatches);
     try {
       return await fn();
     } finally {
@@ -95,7 +95,7 @@ export async function captureFullPage(tab) {
     const contentSize = metrics.cssContentSize || metrics.contentSize;
     const totalWidth = Math.ceil(contentSize.width);
     const totalHeight = Math.ceil(contentSize.height);
-    console.log(`FullShot: measured content ${totalWidth}x${totalHeight} css px (dpr ${dpr})`);
+    console.log(`fullshot: measured content ${totalWidth}x${totalHeight} css px (dpr ${dpr})`);
 
     const textNodes = await runInPage(tabId, `(${collectVisibleTextNodes.toString()})()`);
 
@@ -133,7 +133,7 @@ export async function captureVectorPdf(tab) {
     const contentSize = metrics.cssContentSize || metrics.contentSize;
     const widthIn = Math.max(1, contentSize.width) / 96;
     const heightIn = Math.max(1, contentSize.height) / 96;
-    console.log(`FullShot: measured content ${contentSize.width}x${contentSize.height} css px`);
+    console.log(`fullshot: measured content ${contentSize.width}x${contentSize.height} css px`);
 
     await sendCommand(tabId, "Emulation.setEmulatedMedia", { media: "screen" });
 

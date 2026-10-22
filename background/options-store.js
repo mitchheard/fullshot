@@ -6,7 +6,7 @@ export const DEFAULT_OPTIONS = {
   pdfMode: "claude", // "claude" | "vector"
   imageFormat: "png", // "png" | "jpeg"
   jpegQuality: 90, // 0-100
-  baseFolder: "FullShot",
+  baseFolder: "fullshot",
   subfolders: "month", // "none" | "month" | "domain"
   filenamePreset: "domain_date_title", // "domain_date_title" | "title_date" | "date_domain" | "custom"
   customTemplate: "{domain}_{date}-{time}_{title}",

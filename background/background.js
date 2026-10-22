@@ -59,7 +59,7 @@ async function runCaptureImage(tab, options, tokens) {
 async function runCapture(tab, formatOverride) {
   if (!tab?.id || !/^https?:/.test(tab.url || "")) {
     flashBadge("✗", "#dc2626");
-    console.warn("FullShot: capture skipped, unsupported page", tab?.url);
+    console.warn("fullshot: capture skipped, unsupported page", tab?.url);
     return;
   }
 
@@ -78,7 +78,7 @@ async function runCapture(tab, formatOverride) {
 
     flashBadge("✓", "#16a34a");
   } catch (err) {
-    console.error("FullShot capture failed:", err);
+    console.error("fullshot capture failed:", err);
     flashBadge("✗", "#dc2626", 4000);
   }
 }
