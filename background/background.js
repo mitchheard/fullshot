@@ -62,6 +62,17 @@ function recordFailure(message, url) {
   return chrome.storage.local.set({ lastError: { message, url: url || "", at: Date.now() } });
 }
 
+function explainError(err) {
+  const message = String(err?.message || err);
+  if (message.includes("chrome-extension://")) {
+    return "Chrome blocked debugging this tab because another extension has content in it (an injected panel or iframe). Try disabling your other extensions on this site, or test in an Incognito window.";
+  }
+  if (message.includes("Another debugger is already attached")) {
+    return "Another debugger is already attached to this tab. Close DevTools or other debugging tools on it and try again.";
+  }
+  return message;
+}
+
 async function runCapture(tab, formatOverride) {
   if (!tab?.id || !/^https?:/.test(tab.url || "")) {
     flashBadge("✗", "#dc2626");
@@ -88,7 +99,7 @@ async function runCapture(tab, formatOverride) {
   } catch (err) {
     console.error("fullshot capture failed:", err);
     flashBadge("✗", "#dc2626", 4000);
-    await recordFailure(String(err?.message || err), tab.url);
+    await recordFailure(explainError(err), tab.url);
   }
 }
 
