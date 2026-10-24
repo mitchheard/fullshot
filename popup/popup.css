@@ -60,3 +60,9 @@ body {
   min-height: 14px;
   text-align: center;
 }
+
+.status.error {
+  color: #b91c1c;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

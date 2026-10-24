@@ -56,10 +56,17 @@ async function runCaptureImage(tab, options, tokens) {
   }
 }
 
+// The popup shows this so a failed capture is explained without opening
+// the service worker console.
+function recordFailure(message, url) {
+  return chrome.storage.local.set({ lastError: { message, url: url || "", at: Date.now() } });
+}
+
 async function runCapture(tab, formatOverride) {
   if (!tab?.id || !/^https?:/.test(tab.url || "")) {
     flashBadge("✗", "#dc2626");
     console.warn("fullshot: capture skipped, unsupported page", tab?.url);
+    await recordFailure("This kind of page can't be captured (only regular http/https pages).", tab?.url);
     return;
   }
 
@@ -76,10 +83,12 @@ async function runCapture(tab, formatOverride) {
       await runCapturePdf(tab, options, tokens);
     }
 
+    await chrome.storage.local.remove("lastError");
     flashBadge("✓", "#16a34a");
   } catch (err) {
     console.error("fullshot capture failed:", err);
     flashBadge("✗", "#dc2626", 4000);
+    await recordFailure(String(err?.message || err), tab.url);
   }
 }
 
