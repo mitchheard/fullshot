@@ -65,7 +65,7 @@ function recordFailure(message, url) {
 function explainError(err) {
   const message = String(err?.message || err);
   if (message.includes("chrome-extension://")) {
-    return "Chrome blocked debugging this tab because another extension has content in it (an injected panel or iframe). Try disabling your other extensions on this site, or test in an Incognito window.";
+    return "Chrome blocked debugging this tab because another extension has content in it, usually a password manager's autofill icon in a form field or an injected panel. Pause that extension on this site, or test in an Incognito window.";
   }
   if (message.includes("Another debugger is already attached")) {
     return "Another debugger is already attached to this tab. Close DevTools or other debugging tools on it and try again.";

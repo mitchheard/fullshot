@@ -48,7 +48,7 @@ Because fullshot uses `chrome.debugger`, Chrome shows a "fullshot started debugg
 - **Nothing happens / red ✗ badge:** open `chrome://extensions`, click the **service worker** link on fullshot's card, and look at the console. Errors are logged there. After changing any code, click the reload icon on the card.
 - **A Save As dialog appears:** you have Chrome's "Ask where to save each file before downloading" setting on (`chrome://settings/downloads`). Chrome applies it regardless of what an extension asks for.
 - **Shortcut doesn't fire:** check `chrome://extensions/shortcuts`; Chrome sometimes keeps a previously assigned key instead of picking up the manifest default.
-- **"Cannot access a chrome-extension:// URL of different extension":** Chrome refuses to attach the debugger when another extension has put content into the page (an injected panel or iframe, as some writing assistants and password managers do). Disable your other extensions on that site, or try an Incognito window with only fullshot enabled.
+- **"Cannot access a chrome-extension:// URL of different extension":** Chrome refuses to attach the debugger when another extension has put content into the page. The usual culprit is a password manager's autofill icon inside a form field (it's an injected iframe), and some writing assistants and side panels do the same. Pause that extension on the site, or try an Incognito window with only fullshot enabled. If it's your own page, most password managers have an opt-out attribute for fields, such as `data-lpignore="true"` for LastPass.
 - **Can't capture a page:** Chrome blocks extensions on `chrome://` pages, the Web Store, and some other internal pages.
 
 ## Known limitations
