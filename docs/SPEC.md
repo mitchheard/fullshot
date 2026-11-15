@@ -41,14 +41,14 @@ Diagnosed on claude.ai's own chat panel (an 18-level-deep ancestor chain) that o
 **Image output**
 
 * PNG default (JPEG option, quality configurable).
-* Saved to disk AND copied to the clipboard via an offscreen document (`navigator.clipboard.write`) — the clipboard copy is always PNG even if the saved file is JPEG, since Chrome's Clipboard API doesn't accept `image/jpeg`.
+* Saved to disk AND copied to the clipboard via a small focused extension window (`clipboard/clipboard.html`) that calls `navigator.clipboard.write` and is closed right after. Chrome rejects image writes with "Document is not focused" from the service worker's offscreen document, which can never take focus — the clipboard copy is always PNG even if the saved file is JPEG, since Chrome's Clipboard API doesn't accept `image/jpeg`.
 * **Copy-only mode** (popup "Copy" button, `capture-copy` command): same capture and stitch, but the PNG goes only to the clipboard and nothing is downloaded.
 * Options checkbox "also save Claude-sized tiles" additionally saves 1440×2400-ish PNG tiles alongside the main image.
 
 **Saving**
 
 * Path: `Downloads/<base>/<subfolder>/<domain>_<YYYYMMDD-HHmm>_<title-slug>.<ext>` (slug: lowercase, hyphens, max 50 chars, diacritics stripped, path-traversal-safe).
-* `chrome.downloads.download` with `saveAs:false`, `conflictAction:'uniquify'`. `URL.createObjectURL()` doesn't exist in a service worker context, only in a real document, so the offscreen document (already needed for clipboard writes) mints the `blob:` URL from the captured bytes and hands the URL string back — but `chrome.downloads` itself isn't available *inside* the offscreen document, so the actual `chrome.downloads.download()` call and its completion tracking still run in the service worker, against that URL.
+* `chrome.downloads.download` with `saveAs:false`, `conflictAction:'uniquify'`. `URL.createObjectURL()` doesn't exist in a service worker context, only in a real document, so the offscreen document mints the `blob:` URL from the captured bytes and hands the URL string back — but `chrome.downloads` itself isn't available *inside* the offscreen document, so the actual `chrome.downloads.download()` call and its completion tracking still run in the service worker, against that URL.
 * Toolbar badge gives lightweight feedback ("…" while capturing, "✓"/"✗" after) instead of a native notification, since `notifications` wasn't in the requested permission set.
 * Known caveat: if Chrome's global "Ask where to save each file" setting is on, Chrome shows the Save As dialog regardless of `saveAs:false` — this is a Chrome-level override the extension can't suppress.
 

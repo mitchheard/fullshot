@@ -1,6 +1,6 @@
-// Shared helper for talking to the offscreen document — used both for
-// clipboard writes and for downloads, since the service worker has no
-// document context (no URL.createObjectURL, no navigator.clipboard).
+// Shared helper for talking to the offscreen document — used for
+// downloads, since the service worker has no document context
+// (no URL.createObjectURL).
 
 const OFFSCREEN_URL = "offscreen/offscreen.html";
 
@@ -8,8 +8,8 @@ export async function ensureOffscreenDocument() {
   try {
     await chrome.offscreen.createDocument({
       url: OFFSCREEN_URL,
-      reasons: ["CLIPBOARD", "BLOBS"],
-      justification: "Write captured screenshots to the clipboard and mint blob: URLs for downloads.",
+      reasons: ["BLOBS"],
+      justification: "Mint blob: URLs for downloads.",
     });
   } catch (err) {
     const message = String(err && err.message ? err.message : err);

@@ -37,7 +37,8 @@ Captures are saved to `Downloads/fullshot/<year-month>/` by default. Folder and 
 | `debugger` | Drives Chrome's DevTools Protocol for the screenshot, scrolling, and print-to-PDF |
 | `activeTab` | Reads the current tab's URL and title for filenames, only when you invoke the extension |
 | `downloads` | Saves the file |
-| `offscreen` + `clipboardWrite` | Copies the image to the clipboard (service workers can't) |
+| `clipboardWrite` | Copies the image to the clipboard, via a small window that flashes open and closed (Chrome only allows image writes from a focused page) |
+| `offscreen` | Creates `blob:` URLs for downloads (service workers can't) |
 | `storage` | Remembers your options |
 
 There are no `host_permissions` and no network requests anywhere in the shipped code. [pdf-lib](https://github.com/Hopding/pdf-lib) is vendored in `lib/` rather than loaded from a CDN. Everything stays on your machine.
@@ -67,7 +68,8 @@ Because fullshot uses `chrome.debugger`, Chrome shows a "fullshot started debugg
 manifest.json
 background/   service worker: capture orchestration, stitching, PDF/image building, saving, options
 content/       in-page snippets run via the debugger's Runtime.evaluate (not a declared content script)
-offscreen/     offscreen document: clipboard writes and blob: URLs, which a service worker can't do
+offscreen/     offscreen document: blob: URLs, which a service worker can't make
+clipboard/     tiny focused window that writes the image to the clipboard
 popup/         toolbar popup
 options/       options page
 lib/           vendored pdf-lib (MIT)
