@@ -42,6 +42,7 @@ Diagnosed on claude.ai's own chat panel (an 18-level-deep ancestor chain) that o
 
 * PNG default (JPEG option, quality configurable).
 * Saved to disk AND copied to the clipboard via an offscreen document (`navigator.clipboard.write`) — the clipboard copy is always PNG even if the saved file is JPEG, since Chrome's Clipboard API doesn't accept `image/jpeg`.
+* **Copy-only mode** (popup "Copy" button, `capture-copy` command): same capture and stitch, but the PNG goes only to the clipboard and nothing is downloaded.
 * Options checkbox "also save Claude-sized tiles" additionally saves 1440×2400-ish PNG tiles alongside the main image.
 
 **Saving**

@@ -4,7 +4,10 @@ Full-page screenshots for Chrome, saved as tiled searchable PDFs or clipboard-re
 
 - **Cmd+Shift+S** (Mac) / **Alt+Shift+S** (Windows/Linux): capture the current page in your default format (PDF unless you change it)
 - **Cmd+Shift+I** (Mac) / **Alt+Shift+I** (Windows/Linux): capture the current page as an image, saved to disk and copied to the clipboard
-- Toolbar icon: popup with **PDF** / **Image** buttons and a gear for options
+- **Alt+Shift+C** (Windows/Linux) / **Cmd+Shift+Y** (Mac): copy the full page to the clipboard as a PNG, without saving a file
+- Toolbar icon: popup with **PDF** / **Image** / **Copy** buttons and a gear for options
+
+Shortcuts can be changed at `chrome://extensions/shortcuts`.
 
 ## Install
 
@@ -25,7 +28,7 @@ Captures are saved to `Downloads/fullshot/<year-month>/` by default. Folder and 
 - **Two PDF modes:**
   - **Claude PDF** (default): the page is sliced into ~2400px-tall tiles, one per PDF page, each embedded as an image with an invisible text layer so the PDF stays searchable. It is a pixel-exact screenshot, so it renders the same as the live page.
   - **Vector PDF**: Chrome's own print-to-PDF at full page size, producing a single continuous page with real vector text. It has no tile seams and is usually smaller, but it relies on Chrome's print rendering, which can differ from the screen version on pages with canvas/WebGL content or `@media print` styles.
-- **Image mode** saves a PNG or JPEG and always copies a PNG to the clipboard. Optionally it also saves tiles.
+- **Image mode** saves a PNG or JPEG and always copies a PNG to the clipboard. Optionally it also saves tiles. **Copy** skips the file entirely and only puts the PNG on the clipboard.
 
 ## Permissions and privacy
 

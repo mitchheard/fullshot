@@ -26,6 +26,10 @@
     "capture-image": {
       "suggested_key": { "default": "Alt+Shift+I", "mac": "Command+Shift+I" },
       "description": "Capture full page as image"
+    },
+    "capture-copy": {
+      "suggested_key": { "default": "Alt+Shift+C", "mac": "Command+Shift+Y" },
+      "description": "Copy full page to clipboard (no file saved)"
     }
   },
   "icons": {

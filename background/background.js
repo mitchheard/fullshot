@@ -56,6 +56,13 @@ async function runCaptureImage(tab, options, tokens) {
   }
 }
 
+// Copy-only: nothing is written to disk, the PNG just goes on the clipboard.
+async function runCaptureCopy(tab) {
+  const capture = await captureFullPage(tab);
+  const bigCanvas = await compositeFullPage(capture.segments, capture.width, capture.height);
+  await writeBlobToClipboard(await canvasToPngBlob(bigCanvas));
+}
+
 // The popup shows this so a failed capture is explained without opening
 // the service worker console.
 function recordFailure(message, url) {
@@ -88,7 +95,9 @@ async function runCapture(tab, formatOverride) {
     const format = formatOverride || options.defaultFormat;
     const tokens = buildTokens({ url: tab.url, title: tab.title });
 
-    if (format === "image") {
+    if (format === "copy") {
+      await runCaptureCopy(tab);
+    } else if (format === "image") {
       await runCaptureImage(tab, options, tokens);
     } else {
       await runCapturePdf(tab, options, tokens);
@@ -106,6 +115,7 @@ async function runCapture(tab, formatOverride) {
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === "capture-default") runCapture(tab);
   else if (command === "capture-image") runCapture(tab, "image");
+  else if (command === "capture-copy") runCapture(tab, "copy");
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

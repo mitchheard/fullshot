@@ -13,6 +13,7 @@ function trigger(format) {
 
 document.getElementById("btn-pdf").addEventListener("click", () => trigger("pdf"));
 document.getElementById("btn-image").addEventListener("click", () => trigger("image"));
+document.getElementById("btn-copy").addEventListener("click", () => trigger("copy"));
 
 chrome.storage.local.get("lastError").then(({ lastError }) => {
   if (!lastError) return;
