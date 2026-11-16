@@ -28,9 +28,10 @@ Diagnosed on claude.ai's own chat panel (an 18-level-deep ancestor chain) that o
 
 **Triggers**
 
-* `capture-default` — Alt+Shift+S — uses default format from options (default: PDF).
-* `capture-image` — Alt+Shift+I — always image.
-* Toolbar popup: two large buttons "PDF" and "Image"; gear icon → options page.
+* `capture-default` — Cmd/Alt+Shift+S — uses default format from options (default: PDF).
+* `capture-image` — Cmd/Alt+Shift+I — always image (saved and copied).
+* `capture-copy` — Cmd+Shift+Y / Alt+Shift+C — clipboard only, nothing saved.
+* Toolbar popup: three buttons "PDF", "Image" and "Copy"; gear icon → options page.
 
 **PDF output**
 
@@ -54,7 +55,7 @@ Diagnosed on claude.ai's own chat panel (an 18-level-deep ancestor chain) that o
 
 **Options page**
 
-All fields from the spec: default format, PDF mode, image format (+ JPEG quality), base folder name, subfolders (none/month/domain), filename preset (including custom template with `{domain} {title} {date} {time}` tokens), "also save Claude-sized tiles", and a live example-filename preview. Options auto-save on change (no separate Save button) and persist via `chrome.storage.local`.
+All fields from the spec: default format, PDF mode, image format (+ JPEG quality), base folder name, subfolders (none/month/domain), filename preset (including custom template with `{domain} {title} {date} {time}` tokens), "also save Claude-sized tiles", a live example-filename preview, a Shortcuts card listing the currently bound keys (read from `chrome.commands.getAll()`, with a link to `chrome://extensions/shortcuts`), and an About footer with the version (read from the manifest) and credit. Options auto-save on change (no separate Save button) and persist via `chrome.storage.local`.
 
 ## Status
 

@@ -7,6 +7,8 @@ Full-page screenshots for Chrome, saved as tiled searchable PDFs or clipboard-re
 - **Alt+Shift+C** (Windows/Linux) / **Cmd+Shift+Y** (Mac): copy the full page to the clipboard as a PNG, without saving a file
 - Toolbar icon: popup with **PDF** / **Image** / **Copy** buttons and a gear for options
 
+The options page also lists the shortcuts currently bound (including any you've remapped) and shows the installed version.
+
 Shortcuts can be changed at `chrome://extensions/shortcuts`.
 
 ## Install
@@ -73,7 +75,8 @@ clipboard/     tiny focused window that writes the image to the clipboard
 popup/         toolbar popup
 options/       options page
 lib/           vendored pdf-lib (MIT)
-docs/SPEC.md   design notes and decisions
+docs/index.html  landing page (static, no external requests; publish with GitHub Pages from /docs)
+docs/SPEC.md     design notes and decisions
 ```
 
 No build step: plain JavaScript, edit and reload.
@@ -81,3 +84,5 @@ No build step: plain JavaScript, edit and reload.
 ## License
 
 [MIT](LICENSE). The vendored pdf-lib is MIT-licensed too; see `lib/pdf-lib.LICENSE.md`.
+
+Made by [Mitch Heard](https://github.com/mitchheard).

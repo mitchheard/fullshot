@@ -82,3 +82,41 @@ document.querySelectorAll("input").forEach((input) => {
 });
 
 getOptions().then(applyToForm);
+
+// About: the version always comes from the manifest so it can't drift.
+document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
+
+// Shortcuts: show what's actually bound right now, including any the user
+// has remapped, since Chrome owns the real assignments.
+function renderShortcuts(commands) {
+  const list = document.getElementById("shortcut-list");
+  list.replaceChildren();
+  for (const command of commands) {
+    if (!command.description) continue; // skips the built-in _execute_action entry
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = command.description;
+    const keys = document.createElement("span");
+    keys.className = "keys";
+    if (command.shortcut) {
+      // macOS returns glyphs like "⌘⇧S"; Windows/Linux return "Alt+Shift+S".
+      const parts = command.shortcut.includes("+") ? command.shortcut.split("+") : [command.shortcut];
+      for (const part of parts) {
+        const key = document.createElement("kbd");
+        key.textContent = part;
+        keys.append(key);
+      }
+    } else {
+      keys.textContent = "Not set";
+      keys.classList.add("unset");
+    }
+    item.append(label, keys);
+    list.append(item);
+  }
+}
+
+chrome.commands.getAll().then(renderShortcuts);
+
+document.getElementById("customize-shortcuts").addEventListener("click", () => {
+  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+});

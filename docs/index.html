@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fullshot — full-page screenshots for Chrome</title>
+    <meta
+      name="description"
+      content="Capture any web page as a tiled, searchable PDF or a clipboard-ready PNG in one keystroke. Free, open source, and it never touches the network."
+    />
+    <meta name="theme-color" content="#0d0e12" />
+    <meta property="og:title" content="fullshot — full-page screenshots for Chrome" />
+    <meta
+      property="og:description"
+      content="Tiled, searchable PDFs and clipboard-ready PNGs in one keystroke. No network access, no tracking, no host permissions."
+    />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 13v-2.5A1.5 1.5 0 0 1 10.5 9H13M19 9h2.5a1.5 1.5 0 0 1 1.5 1.5V13M23 19v2.5a1.5 1.5 0 0 1-1.5 1.5H19M13 23h-2.5A1.5 1.5 0 0 1 9 21.5V19' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      /* ───────── Tokens ───────── */
+      :root {
+        --bg: #0d0e12;
+        --bg-2: #14151b;
+        --bg-3: #1b1c24;
+        --line: #272935;
+        --text: #ecebe6;
+        --muted: #9b9dab;
+        --accent: #4f46e5;
+        --accent-text: #9ea2ff;
+        --accent-glow: rgba(99, 102, 241, 0.45);
+        --accent-soft: rgba(99, 102, 241, 0.14);
+        --paper: #f4f1ea;
+        --paper-ink: #1d1e26;
+        --paper-muted: #b9b5a8;
+        --shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+        --grain-opacity: 0.07;
+
+        --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Bitstream Charter", Georgia, serif;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f3ec;
+          --bg-2: #efebe2;
+          --bg-3: #e8e3d7;
+          --line: #d9d3c4;
+          --text: #16171d;
+          --muted: #666877;
+          --accent: #4f46e5;
+          --accent-text: #4338ca;
+          --accent-glow: rgba(79, 70, 229, 0.35);
+          --accent-soft: rgba(79, 70, 229, 0.1);
+          --paper: #ffffff;
+          --shadow: 0 30px 70px -25px rgba(40, 36, 20, 0.35);
+          --grain-opacity: 0.05;
+        }
+      }
+
+      /* ───────── Base ───────── */
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 72px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Film-grain overlay: the one texture on the page. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        pointer-events: none;
+        opacity: var(--grain-opacity);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .wrap {
+        width: min(1120px, 100% - 48px);
+        margin-inline: auto;
+      }
+
+      .mono {
+        font-family: var(--mono);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 20px;
+        font: 500 12px/1.5 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent-text);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        font-weight: 500;
+        letter-spacing: -0.025em;
+        line-height: 1.05;
+        margin: 0;
+      }
+
+      h2 {
+        font-size: clamp(2rem, 4.2vw, 3.2rem);
+        max-width: 18ch;
+      }
+
+      em {
+        font-style: italic;
+        color: var(--accent-text);
+      }
+
+      kbd {
+        display: inline-block;
+        min-width: 24px;
+        padding: 2px 7px;
+        font: 600 12px/1.5 var(--mono);
+        text-align: center;
+        color: var(--text);
+        background: var(--bg-3);
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 6px;
+      }
+
+      /* ───────── Nav ───────── */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: color-mix(in srgb, var(--bg) 82%, transparent);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font: 600 19px var(--serif);
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .logo {
+        width: 28px;
+        height: 28px;
+        padding: 5px;
+        border-radius: 8px;
+        background: var(--accent);
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 14px;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      .nav-links a.btn,
+      .nav-links a.btn:hover {
+        color: #fff;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 22px;
+        font: 600 15px var(--sans);
+        text-decoration: none;
+        color: #fff;
+        background: var(--accent);
+        border: 1px solid transparent;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px -10px var(--accent-glow);
+        transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        background: #5b52f0;
+        box-shadow: 0 16px 36px -10px var(--accent-glow);
+      }
+
+      .btn.ghost {
+        color: var(--text);
+        background: transparent;
+        border-color: var(--line);
+        box-shadow: none;
+      }
+
+      .btn.ghost:hover {
+        background: var(--bg-2);
+        border-color: var(--muted);
+      }
+
+      .btn.small {
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: 9px;
+      }
+
+      /* ───────── Hero ───────── */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 80px 0 96px;
+      }
+
+      /* Faint viewfinder grid behind the hero. */
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        opacity: 0.35;
+        mask-image: radial-gradient(ellipse 70% 70% at 70% 40%, #000 0%, transparent 75%);
+        -webkit-mask-image: radial-gradient(ellipse 70% 70% at 70% 40%, #000 0%, transparent 75%);
+      }
+
+      .hero .wrap {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 56px;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: clamp(2.7rem, 6.2vw, 5.1rem);
+        letter-spacing: -0.035em;
+        line-height: 0.98;
+      }
+
+      .lede {
+        max-width: 46ch;
+        margin: 26px 0 34px;
+        font-size: 1.15rem;
+        color: var(--muted);
+      }
+
+      .lede strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        margin-top: 28px;
+        font: 500 12.5px var(--mono);
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+
+      .meta span::before {
+        content: "◦ ";
+        color: var(--accent-text);
+      }
+
+      /* ───────── Hero visual: the page being sliced ───────── */
+      .stage {
+        position: relative;
+        justify-self: center;
+        width: min(380px, 100%);
+        padding: 28px;
+      }
+
+      /* Viewfinder corner brackets around the stage. */
+      .stage .corner {
+        position: absolute;
+        width: 34px;
+        height: 34px;
+        border: 3px solid var(--accent-text);
+        opacity: 0.9;
+      }
+      .corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+      .corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+      .corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+      .corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+
+      .page {
+        position: relative;
+        height: 560px;
+        overflow: hidden;
+        color: var(--paper-ink);
+        background: var(--paper);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .tile {
+        position: relative;
+        height: 33.333%;
+        padding: 18px 20px;
+        border-bottom: 2px dashed rgba(79, 70, 229, 0.55);
+        overflow: hidden;
+      }
+
+      .tile:last-child {
+        border-bottom: 0;
+      }
+
+      .tile-tag {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        padding: 2px 7px;
+        font: 600 9.5px var(--mono);
+        letter-spacing: 0.06em;
+        color: #fff;
+        background: var(--accent);
+        border-radius: 4px;
+      }
+
+      .fake-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+
+      .fake-nav i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--paper-muted);
+      }
+
+      .fake-nav b {
+        margin-left: auto;
+        font: 700 11px var(--sans);
+        letter-spacing: 0.02em;
+      }
+
+      .page h4 {
+        margin: 0 0 8px;
+        font: 600 19px/1.1 var(--serif);
+        letter-spacing: -0.02em;
+      }
+
+      .page p {
+        margin: 0 0 7px;
+        font-size: 10.5px;
+        line-height: 1.5;
+        color: #4b4d59;
+      }
+
+      .bar {
+        display: block;
+        height: 6px;
+        margin-bottom: 6px;
+        border-radius: 3px;
+        background: #dcd8cb;
+      }
+
+      .img-block {
+        height: 54px;
+        margin: 10px 0;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #c9c6ff, #e7d9c4 60%, #f2e3cf);
+      }
+
+      .rows {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5px;
+      }
+
+      .rows td {
+        padding: 5px 0;
+        border-bottom: 1px solid #e3dfd2;
+      }
+
+      .rows td:last-child {
+        text-align: right;
+        font-weight: 600;
+      }
+
+      mark {
+        padding: 0 2px;
+        color: inherit;
+        background: rgba(99, 102, 241, 0.28);
+        border-bottom: 2px solid var(--accent);
+        border-radius: 2px;
+        animation: pulse 2.6s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          background: rgba(99, 102, 241, 0.5);
+        }
+      }
+
+      /* The sweep: everything above the line is "captured". */
+      .scan {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 0;
+        pointer-events: none;
+        background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.16));
+        border-bottom: 2px solid var(--accent);
+        box-shadow: 0 8px 30px 2px var(--accent-glow);
+        animation: sweep 6s cubic-bezier(0.55, 0, 0.3, 1) infinite;
+      }
+
+      @keyframes sweep {
+        0% { height: 0; opacity: 1; }
+        78% { height: 100%; opacity: 1; }
+        92% { height: 100%; opacity: 0; }
+        100% { height: 0; opacity: 0; }
+      }
+
+      .float {
+        position: absolute;
+        z-index: 2;
+        background: var(--bg-2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+
+      .search-chip {
+        top: 6px;
+        right: -34px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        font: 500 12.5px var(--mono);
+        border-radius: 999px;
+        animation: bob 5s ease-in-out infinite;
+      }
+
+      .search-chip svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: var(--accent-text);
+        stroke-width: 2.4;
+        stroke-linecap: round;
+      }
+
+      .search-chip span {
+        color: var(--muted);
+      }
+
+      .mini-popup {
+        bottom: 6px;
+        left: -52px;
+        width: 232px;
+        padding: 12px;
+        border-radius: 14px;
+        animation: bob 6s ease-in-out -2s infinite;
+      }
+
+      .mini-head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 10px;
+        font: 700 13px var(--sans);
+      }
+
+      .mini-head .logo {
+        width: 18px;
+        height: 18px;
+        padding: 3px;
+        border-radius: 5px;
+      }
+
+      .mini-btns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .mini-btns div {
+        padding: 8px 0 7px;
+        text-align: center;
+        font: 600 11px var(--sans);
+        background: var(--bg-3);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+      }
+
+      .mini-btns div small {
+        display: block;
+        font-weight: 400;
+        font-size: 9.5px;
+        color: var(--muted);
+      }
+
+      .mini-btns svg {
+        display: block;
+        width: 15px;
+        height: 15px;
+        margin: 0 auto 3px;
+        fill: none;
+        stroke: var(--accent-text);
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      @keyframes bob {
+        50% { transform: translateY(-7px); }
+      }
+
+      /* ───────── Facts strip ───────── */
+      .facts {
+        border-block: 1px solid var(--line);
+        background: var(--bg-2);
+      }
+
+      .facts .wrap {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .fact {
+        padding: 30px 24px;
+        border-left: 1px solid var(--line);
+      }
+
+      .fact:first-child {
+        border-left: 0;
+        padding-left: 0;
+      }
+
+      .fact b {
+        display: block;
+        font: 500 clamp(2rem, 4vw, 3rem) var(--serif);
+        letter-spacing: -0.03em;
+        line-height: 1;
+        color: var(--accent-text);
+      }
+
+      .fact span {
+        display: block;
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* ───────── Sections ───────── */
+      section.block {
+        padding: 104px 0;
+      }
+
+      .section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 20px 48px;
+        margin-bottom: 52px;
+      }
+
+      .section-head p {
+        max-width: 44ch;
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .card {
+        position: relative;
+        padding: 28px 26px 30px;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+      }
+
+      .card .icon {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        margin-bottom: 22px;
+        background: var(--accent-soft);
+        border-radius: 12px;
+      }
+
+      .card .icon svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: var(--accent-text);
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .card h3 {
+        font-size: 1.7rem;
+        margin-bottom: 10px;
+      }
+
+      .card p {
+        margin: 0 0 20px;
+        font-size: 15.5px;
+        color: var(--muted);
+      }
+
+      .keys {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .keys .or {
+        margin: 0 4px;
+        font-family: var(--mono);
+      }
+
+      /* Tougher-pages list */
+      .tough {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        border-top: 1px solid var(--line);
+      }
+
+      .tough article {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 4px 12px;
+        padding: 30px 28px 30px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .tough article:nth-child(even) {
+        padding-left: 28px;
+        padding-right: 0;
+        border-left: 1px solid var(--line);
+      }
+
+      .tough .num {
+        grid-row: span 2;
+        font: 500 13px var(--mono);
+        color: var(--accent-text);
+        padding-top: 5px;
+      }
+
+      .tough h3 {
+        font-size: 1.45rem;
+      }
+
+      .tough p {
+        margin: 6px 0 0;
+        font-size: 15.5px;
+        color: var(--muted);
+      }
+
+      /* PDF modes */
+      .alt {
+        background: var(--bg-2);
+        border-block: 1px solid var(--line);
+      }
+
+      .modes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .mode {
+        padding: 32px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+      }
+
+      .mode.default {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-soft);
+      }
+
+      .mode .tag {
+        display: inline-block;
+        margin-bottom: 16px;
+        padding: 3px 10px;
+        font: 600 11px var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--bg-3);
+        border-radius: 999px;
+      }
+
+      .mode.default .tag {
+        color: #fff;
+        background: var(--accent);
+      }
+
+      .mode h3 {
+        font-size: 1.9rem;
+        margin-bottom: 12px;
+      }
+
+      .mode > p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 15.5px;
+      }
+
+      .mode ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 15px;
+      }
+
+      .mode li {
+        display: flex;
+        gap: 10px;
+        padding: 9px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .mode li::before {
+        content: "→";
+        color: var(--accent-text);
+        font-family: var(--mono);
+      }
+
+      /* Privacy table */
+      .perm-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+      }
+
+      .perm-table th {
+        padding: 0 16px 12px 0;
+        text-align: left;
+        font: 500 12px var(--mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .perm-table td {
+        padding: 16px 16px 16px 0;
+        vertical-align: top;
+        border-top: 1px solid var(--line);
+      }
+
+      .perm-table td:first-child {
+        width: 190px;
+        white-space: nowrap;
+      }
+
+      .perm-table code {
+        padding: 3px 9px;
+        font: 600 13px var(--mono);
+        color: var(--accent-text);
+        background: var(--accent-soft);
+        border-radius: 6px;
+      }
+
+      .perm-table td:last-child {
+        color: var(--muted);
+      }
+
+      .privacy-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 64px;
+        align-items: start;
+      }
+
+      .privacy-grid h2 {
+        margin-bottom: 20px;
+      }
+
+      .privacy-grid .note {
+        color: var(--muted);
+        margin: 0;
+      }
+
+      /* Install */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+
+      .steps li {
+        position: relative;
+        padding: 30px 26px 28px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        counter-increment: step;
+      }
+
+      .steps li::before {
+        content: counter(step, decimal-leading-zero);
+        display: block;
+        margin-bottom: 20px;
+        font: 500 3rem/1 var(--serif);
+        letter-spacing: -0.04em;
+        color: var(--accent-text);
+      }
+
+      .steps h3 {
+        margin-bottom: 8px;
+        font-size: 1.4rem;
+      }
+
+      .steps p {
+        margin: 0;
+        font-size: 15px;
+        color: var(--muted);
+      }
+
+      .steps code,
+      .faq code {
+        padding: 2px 7px;
+        font: 500 0.85em var(--mono);
+        background: var(--bg-3);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--text);
+      }
+
+      .install-cta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px 20px;
+        margin-top: 32px;
+      }
+
+      .install-cta p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* FAQ */
+      .faq {
+        max-width: 780px;
+      }
+
+      .faq details {
+        border-top: 1px solid var(--line);
+      }
+
+      .faq details:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .faq summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 22px 0;
+        font: 500 1.35rem var(--serif);
+        letter-spacing: -0.015em;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .faq summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .faq summary::after {
+        content: "+";
+        flex: none;
+        font: 400 1.6rem var(--mono);
+        color: var(--accent-text);
+        transition: transform 0.2s;
+      }
+
+      .faq details[open] summary::after {
+        transform: rotate(45deg);
+      }
+
+      .faq details p {
+        margin: 0 0 24px;
+        max-width: 62ch;
+        color: var(--muted);
+      }
+
+      /* Footer */
+      footer {
+        padding: 56px 0 64px;
+        border-top: 1px solid var(--line);
+        background: var(--bg-2);
+      }
+
+      footer .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 28px;
+      }
+
+      footer .brand {
+        margin-bottom: 12px;
+      }
+
+      footer p {
+        margin: 0 0 4px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      footer .credit {
+        font-size: 15px;
+        color: var(--text);
+      }
+
+      footer .credit a {
+        color: var(--accent-text);
+        text-decoration: none;
+        border-bottom: 1px solid currentColor;
+      }
+
+      .foot-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 24px;
+        font: 500 13px var(--mono);
+      }
+
+      .foot-links a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+
+      .foot-links a:hover {
+        color: var(--text);
+      }
+
+      .version-pill {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 9px;
+        font: 600 12px var(--mono);
+        color: var(--accent-text);
+        background: var(--accent-soft);
+        border-radius: 999px;
+      }
+
+      /* ───────── Motion ───────── */
+      .rise {
+        opacity: 0;
+        transform: translateY(18px);
+        animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+        animation-delay: calc(var(--i, 0) * 90ms + 80ms);
+      }
+
+      @keyframes rise {
+        to { opacity: 1; transform: none; }
+      }
+
+      /* Hidden only once JS has confirmed it can reveal them again. */
+      .js .reveal {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .js .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .rise, .js .reveal { opacity: 1; transform: none; animation: none; transition: none; }
+        .scan { animation: none; height: 100%; opacity: 0.5; }
+        .search-chip, .mini-popup, mark { animation: none; }
+      }
+
+      /* ───────── Responsive ───────── */
+      @media (max-width: 920px) {
+        .hero .wrap { grid-template-columns: 1fr; gap: 64px; }
+        .stage { margin-bottom: 8px; }
+        .search-chip { right: -6px; }
+        .mini-popup { left: -10px; }
+        .cards, .steps { grid-template-columns: 1fr; }
+        .modes { grid-template-columns: 1fr; }
+        .privacy-grid { grid-template-columns: 1fr; gap: 36px; }
+        .tough { grid-template-columns: 1fr; }
+        .tough article:nth-child(even) { padding-left: 0; border-left: 0; }
+        .tough article { padding-right: 0; }
+        .facts .wrap { grid-template-columns: repeat(2, 1fr); }
+        .fact:nth-child(3) { border-left: 0; padding-left: 0; }
+        .fact:nth-child(n + 3) { border-top: 1px solid var(--line); }
+        .nav-links a:not(.btn) { display: none; }
+      }
+
+      @media (max-width: 560px) {
+        body { font-size: 16px; }
+        .hero { padding: 48px 0 64px; }
+        section.block { padding: 72px 0; }
+        .perm-table td:first-child { width: auto; white-space: normal; }
+        .perm-table th:last-child { display: none; }
+        .perm-table tr { display: block; padding: 14px 0; border-top: 1px solid var(--line); }
+        .perm-table td { display: block; padding: 0; border: 0; }
+        .perm-table td:first-child { margin-bottom: 6px; }
+        .perm-table thead { display: none; }
+        .stage { padding: 22px; }
+        .search-chip { right: -2px; }
+        .mini-popup { left: -4px; width: 210px; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="nav">
+      <div class="wrap">
+        <a class="brand" href="#top">
+          <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" />
+          </svg>
+          fullshot
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#modes">Modes</a>
+          <a href="#pages">Hard pages</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#faq">FAQ</a>
+          <a class="btn small" href="#install">Install</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- ───────── Hero ───────── -->
+      <section class="hero">
+        <div class="wrap">
+          <div>
+            <p class="eyebrow rise" style="--i: 0">Chrome extension · Free · Open source</p>
+            <h1 class="rise" style="--i: 1">
+              Screenshot the <em>whole</em> page. Keep every word <em>searchable.</em>
+            </h1>
+            <p class="lede rise" style="--i: 2">
+              fullshot turns any web page into a tiled, searchable PDF or a clipboard-ready PNG in
+              <strong>one keystroke</strong>. It never touches the network, and it asks for no access to any
+              website.
+            </p>
+            <div class="cta-row rise" style="--i: 3">
+              <a class="btn" href="#install">
+                Install in 3 steps
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+              <a class="btn ghost" href="https://github.com/mitchheard/fullshot" target="_blank" rel="noopener">View source</a>
+            </div>
+            <div class="meta rise" style="--i: 4">
+              <span>v1.0.0</span>
+              <span>Manifest V3</span>
+              <span>MIT licensed</span>
+            </div>
+          </div>
+
+          <div class="stage rise" style="--i: 3" aria-hidden="true">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+
+            <div class="page">
+              <div class="tile">
+                <span class="tile-tag">PAGE 01</span>
+                <div class="fake-nav"><i></i><i></i><i></i><b>acme.co</b></div>
+                <h4>Quarterly report</h4>
+                <p>Revenue grew across every segment this quarter, driven mostly by repeat customers.</p>
+                <span class="bar" style="width: 88%"></span>
+                <span class="bar" style="width: 64%"></span>
+                <div class="img-block"></div>
+              </div>
+              <div class="tile">
+                <span class="tile-tag">PAGE 02</span>
+                <h4>Billing details</h4>
+                <p>Attached is your <mark>invoice</mark> for March. Each <mark>invoice</mark> is due in 30 days.</p>
+                <table class="rows">
+                  <tr><td>Design retainer</td><td>$4,200</td></tr>
+                  <tr><td>Hosting</td><td>$310</td></tr>
+                </table>
+              </div>
+              <div class="tile">
+                <span class="tile-tag">PAGE 03</span>
+                <h4>Next steps</h4>
+                <p>Questions about any <mark>invoice</mark>? Reply to this page and we'll follow up within a day.</p>
+                <span class="bar" style="width: 92%"></span>
+                <span class="bar" style="width: 76%"></span>
+                <span class="bar" style="width: 40%"></span>
+              </div>
+              <div class="scan"></div>
+            </div>
+
+            <div class="float search-chip">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+              invoice <span>3 matches</span>
+            </div>
+
+            <div class="float mini-popup">
+              <div class="mini-head">
+                <svg class="logo" viewBox="0 0 24 24"><path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" /></svg>
+                fullshot
+              </div>
+              <div class="mini-btns">
+                <div>
+                  <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>
+                  PDF<small>Save file</small>
+                </div>
+                <div>
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+                  Image<small>Save + copy</small>
+                </div>
+                <div>
+                  <svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></svg>
+                  Copy<small>Clipboard</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── Facts ───────── -->
+      <div class="facts">
+        <div class="wrap">
+          <div class="fact"><b>0</b><span>network requests, anywhere in the code</span></div>
+          <div class="fact"><b>0</b><span>host permissions. It can't read your sites</span></div>
+          <div class="fact"><b>3</b><span>capture modes: PDF, Image, Copy</span></div>
+          <div class="fact"><b>1</b><span>keystroke from page to file</span></div>
+        </div>
+      </div>
+
+      <!-- ───────── Modes ───────── -->
+      <section class="block" id="modes">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <div>
+              <p class="eyebrow">Three ways to capture</p>
+              <h2>Pick the output. <em>Skip</em> the rest.</h2>
+            </div>
+            <p>Every mode captures the full page height. Each has its own shortcut, and you can remap them in Chrome.</p>
+          </div>
+
+          <div class="cards">
+            <article class="card reveal">
+              <div class="icon"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg></div>
+              <h3>PDF</h3>
+              <p>A tiled PDF with an invisible text layer, so you can search it, select from it, and hand it to anything that reads text.</p>
+              <div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>S</kbd><span class="or">/</span><kbd>Alt</kbd><kbd>Shift</kbd><kbd>S</kbd></div>
+            </article>
+            <article class="card reveal" style="transition-delay: 90ms">
+              <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg></div>
+              <h3>Image</h3>
+              <p>A PNG or JPEG saved to your Downloads, and a PNG copied to your clipboard at the same time. Optionally saves tiles too.</p>
+              <div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>I</kbd><span class="or">/</span><kbd>Alt</kbd><kbd>Shift</kbd><kbd>I</kbd></div>
+            </article>
+            <article class="card reveal" style="transition-delay: 180ms">
+              <div class="icon"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></svg></div>
+              <h3>Copy</h3>
+              <p>Straight to the clipboard and nothing written to disk. Paste it into a chat, a doc, or a ticket and move on.</p>
+              <div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>Y</kbd><span class="or">/</span><kbd>Alt</kbd><kbd>Shift</kbd><kbd>C</kbd></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── Hard pages ───────── -->
+      <section class="block alt" id="pages">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <div>
+              <p class="eyebrow">Built for pages that fight back</p>
+              <h2>Dashboards, chat apps, endless articles.</h2>
+            </div>
+            <p>Plenty of screenshot tools stop at the first viewport. fullshot is built around the pages that break them.</p>
+          </div>
+
+          <div class="tough reveal">
+            <article>
+              <span class="num">01</span>
+              <h3>Scrolling panels, handled</h3>
+              <p>When an inner pane scrolls instead of the page, as in dashboards and chat UIs, fullshot temporarily unclips it for the capture, then restores it exactly.</p>
+            </article>
+            <article>
+              <span class="num">02</span>
+              <h3>Very tall pages</h3>
+              <p>Pages are captured in segments and stitched together, so length isn't limited by what a single screenshot call allows.</p>
+            </article>
+            <article>
+              <span class="num">03</span>
+              <h3>Lazy-loaded content</h3>
+              <p>It scrolls through the page first to wake lazy images and sections, then returns you to where you were before capturing.</p>
+            </article>
+            <article>
+              <span class="num">04</span>
+              <h3>No doubled headers</h3>
+              <p>Sticky and fixed elements are captured once at their natural position, not repeated at every scroll step.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── PDF flavors ───────── -->
+      <section class="block">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <div>
+              <p class="eyebrow">Two kinds of PDF</p>
+              <h2>Pixel-exact, or <em>vector-sharp.</em></h2>
+            </div>
+            <p>Choose once in options. Both are searchable, and both work from the same shortcut.</p>
+          </div>
+
+          <div class="modes">
+            <article class="mode default reveal">
+              <span class="tag">Default</span>
+              <h3>Claude PDF</h3>
+              <p>The page is sliced into tall tiles, one per PDF page, each with an invisible text layer on top.</p>
+              <ul>
+                <li>Pixel-exact: it looks like the live page, including canvas and WebGL content</li>
+                <li>Searchable and selectable text layer</li>
+                <li>Tile edges can split a paragraph across two pages</li>
+              </ul>
+            </article>
+            <article class="mode reveal" style="transition-delay: 90ms">
+              <span class="tag">Experimental</span>
+              <h3>Vector PDF</h3>
+              <p>Chrome's own print-to-PDF at full page size, as one continuous page with real vector text.</p>
+              <ul>
+                <li>No tile seams, and usually a smaller file</li>
+                <li>Crisp at any zoom level</li>
+                <li>Depends on Chrome's print rendering, which can differ on canvas-heavy pages</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── Privacy ───────── -->
+      <section class="block alt" id="privacy">
+        <div class="wrap privacy-grid">
+          <div class="reveal">
+            <p class="eyebrow">Privacy, by construction</p>
+            <h2>Nothing leaves your machine.</h2>
+            <p class="note">
+              No accounts, no analytics, no servers. The extension makes no network requests, the PDF library is
+              bundled rather than loaded from a CDN, and it declares no host permissions, so it can't read the
+              sites you visit. Every permission it does ask for is below, and why.
+            </p>
+          </div>
+
+          <table class="perm-table reveal">
+            <thead>
+              <tr><th>Permission</th><th>Why it's needed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>debugger</code></td><td>Drives Chrome's DevTools Protocol for the screenshot, scrolling and print-to-PDF.</td></tr>
+              <tr><td><code>activeTab</code></td><td>Reads the current tab's URL and title for filenames, only when you invoke it.</td></tr>
+              <tr><td><code>downloads</code></td><td>Saves the finished file to your Downloads folder.</td></tr>
+              <tr><td><code>clipboardWrite</code></td><td>Puts the image on your clipboard.</td></tr>
+              <tr><td><code>offscreen</code></td><td>Creates the temporary file URL a download needs.</td></tr>
+              <tr><td><code>storage</code></td><td>Remembers your options on this device.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ───────── Install ───────── -->
+      <section class="block" id="install">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <div>
+              <p class="eyebrow">Get it running</p>
+              <h2>Three steps, about a minute.</h2>
+            </div>
+            <p>fullshot is loaded as an unpacked extension for now. It isn't on the Chrome Web Store.</p>
+          </div>
+
+          <ol class="steps">
+            <li class="reveal">
+              <h3>Download</h3>
+              <p>Grab the ZIP from GitHub and unzip it, or clone the repo. You'll get a <code>fullshot</code> folder.</p>
+            </li>
+            <li class="reveal" style="transition-delay: 90ms">
+              <h3>Load unpacked</h3>
+              <p>Open <code>chrome://extensions</code>, switch on <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and pick the folder.</p>
+            </li>
+            <li class="reveal" style="transition-delay: 180ms">
+              <h3>Capture</h3>
+              <p>Pin the icon, then press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>S</kbd> (<kbd>Alt</kbd><kbd>Shift</kbd><kbd>S</kbd> on Windows and Linux) on any page.</p>
+            </li>
+          </ol>
+
+          <div class="install-cta reveal">
+            <a class="btn" href="https://github.com/mitchheard/fullshot/archive/refs/heads/main.zip">Download ZIP</a>
+            <a class="btn ghost" href="https://github.com/mitchheard/fullshot" target="_blank" rel="noopener">Clone on GitHub</a>
+            <p>Captures land in <code>Downloads/fullshot/</code> by default.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── FAQ ───────── -->
+      <section class="block alt" id="faq">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <div>
+              <p class="eyebrow">Straight answers</p>
+              <h2>Good questions.</h2>
+            </div>
+          </div>
+
+          <div class="faq reveal">
+            <details>
+              <summary>Why does Chrome say "fullshot started debugging this browser"?</summary>
+              <p>
+                fullshot uses Chrome's debugging protocol to take the screenshot, and Chrome always shows that bar
+                while an extension is attached. It can't be hidden, and fullshot detaches the moment the capture
+                finishes.
+              </p>
+            </details>
+            <details>
+              <summary>Why isn't it on the Chrome Web Store?</summary>
+              <p>
+                The <code>debugger</code> permission shows a strong install warning and gets extra review there, so
+                for now it's distributed as source. You can read every line of it before you load it.
+              </p>
+            </details>
+            <details>
+              <summary>Does it work on every page?</summary>
+              <p>
+                Almost. Chrome blocks extensions on <code>chrome://</code> pages and the Web Store. Virtualized
+                lists, where rows don't exist until you scroll to them, can only be captured as far as they've
+                rendered. Fixed UI like a chat composer can land mid-page in app-style layouts.
+              </p>
+            </details>
+            <details>
+              <summary>Nothing happened when I pressed the shortcut.</summary>
+              <p>
+                Check <code>chrome://extensions/shortcuts</code>. Chrome sometimes keeps a previously assigned key
+                instead of the default. The options page lists whatever is actually bound right now.
+              </p>
+            </details>
+            <details>
+              <summary>Is it free?</summary>
+              <p>Yes. It's MIT licensed, with no accounts, no tiers and no tracking.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <div>
+          <a class="brand" href="#top">
+            <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" />
+            </svg>
+            fullshot <span class="version-pill">v1.0.0</span>
+          </a>
+          <p class="credit">
+            Made by <a href="https://github.com/mitchheard" target="_blank" rel="noopener">Mitch Heard</a>
+          </p>
+          <p>MIT License · pdf-lib is vendored under its own MIT license</p>
+        </div>
+        <nav class="foot-links" aria-label="Footer">
+          <a href="https://github.com/mitchheard/fullshot" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/mitchheard/fullshot/blob/main/README.md" target="_blank" rel="noopener">README</a>
+          <a href="https://github.com/mitchheard/fullshot/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+          <a href="#top">Back to top ↑</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      // Reveal-on-scroll. The "js" class is what hides .reveal elements, so
+      // without JS or IntersectionObserver everything simply stays visible.
+      (function () {
+        if (!("IntersectionObserver" in window)) return;
+        document.documentElement.classList.add("js");
+        var items = document.querySelectorAll(".reveal");
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+        );
+        items.forEach(function (el) { io.observe(el); });
+      })();
+    </script>
+  </body>
+</html>

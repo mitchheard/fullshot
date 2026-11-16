@@ -23,7 +23,7 @@
         <label class="choice"><input type="radio" name="defaultFormat" value="pdf" /><span>PDF</span></label>
         <label class="choice"><input type="radio" name="defaultFormat" value="image" /><span>Image</span></label>
       </div>
-      <p class="hint">Used by Alt+Shift+S and the "default" popup action.</p>
+      <p class="hint">Used by the capture shortcut (see Shortcuts below).</p>
     </section>
 
     <section>
@@ -96,6 +96,28 @@
         <code id="preview"></code>
       </div>
     </section>
+
+    <section>
+      <h2>Shortcuts</h2>
+      <ul id="shortcut-list" class="shortcut-list"></ul>
+      <button type="button" id="customize-shortcuts" class="link-btn">Customize shortcuts</button>
+    </section>
+
+    <footer class="about">
+      <svg class="logo small" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" />
+      </svg>
+      <p class="about-line">
+        <strong>fullshot</strong> <span class="version" id="version"></span>
+      </p>
+      <p class="about-line muted">
+        Made by <a href="https://github.com/mitchheard" target="_blank" rel="noopener">Mitch Heard</a>
+      </p>
+      <p class="about-line muted">
+        <a href="https://github.com/mitchheard/fullshot" target="_blank" rel="noopener">Source on GitHub</a>
+        &middot; MIT License &middot; No network access, no tracking
+      </p>
+    </footer>
 
     <p id="saved-indicator" class="saved-indicator"></p>
 
