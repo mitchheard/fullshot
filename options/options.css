@@ -1,33 +1,232 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --page: #f7f8fb;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef2ff;
+  --card: #ffffff;
+  --chip: #f5f6fa;
+  --chip-hover: #eceefb;
+  --border: #e5e7eb;
+  --success: #16a34a;
+  --code-bg: #f1f2f8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1c22;
+    --page: #14151a;
+    --text: #f3f4f6;
+    --muted: #9ca3af;
+    --accent: #818cf8;
+    --accent-hover: #a5b4fc;
+    --accent-soft: #2a2c4a;
+    --card: #1b1c22;
+    --chip: #26272f;
+    --chip-hover: #2f3140;
+    --border: #353744;
+    --success: #22c55e;
+    --code-bg: #26272f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  max-width: 560px;
-  margin: 24px auto;
-  padding: 0 20px 40px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+  background: var(--page);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #1f2937;
+  color: var(--text);
+}
+
+/* Header */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  border-radius: 11px;
+  background: var(--accent);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 h1 {
-  font-size: 20px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Section cards */
+
 section {
-  border-top: 1px solid #e5e7eb;
-  padding: 16px 0;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
 }
 
 h2 {
-  font-size: 13px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6b7280;
-  margin: 0 0 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
-label {
+.hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.field-label {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Choice chips (radio groups) */
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.choices.stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.choice {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.choice > span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 16px 8px 0;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.choice.mono > span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+.choice:hover > span {
+  background: var(--chip-hover);
+}
+
+.choice input:checked + span {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.choice input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Larger option cards (PDF mode) */
+
+.card-choice {
+  display: flex;
+}
+
+.card-choice > .choice-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 11px 14px;
+  align-items: flex-start;
+  border-radius: 12px;
+}
+
+.choice-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.choice-desc {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.choice input:checked + .choice-body .choice-title {
+  color: var(--accent);
+}
+
+.badge {
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--code-bg);
+  border-radius: 999px;
+}
+
+/* Inputs */
+
+label {
   font-size: 14px;
 }
 
@@ -35,35 +234,101 @@ label.block {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
-  margin: 8px 0;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+#custom-template-row {
+  margin-top: 14px;
+}
+
+label.block .hint {
+  margin: 0;
+  font-weight: 400;
+}
+
+.inline-field {
+  align-items: center;
+  gap: 8px;
+  margin-left: 6px;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 input[type="text"],
 input[type="number"] {
-  padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
   font-size: 14px;
-  min-width: 220px;
+  color: var(--text);
+  background: var(--chip);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
 
-.hint {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 4px 0 0;
+input[type="text"] {
+  width: 100%;
 }
+
+input[type="number"] {
+  width: 72px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  cursor: pointer;
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* Filename preview */
 
 .preview {
-  font-size: 13px;
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--chip);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .preview code {
-  background: #f3f4f6;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: var(--text);
 }
+
+/* Saved toast */
 
 .saved-indicator {
   position: fixed;
@@ -72,7 +337,8 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #16a34a;
+  margin: 0;
+  background: var(--success);
   color: white;
   font-size: 14px;
   font-weight: 600;

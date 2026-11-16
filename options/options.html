@@ -2,33 +2,60 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>fullshot Options</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <h1>fullshot</h1>
+    <header class="page-header">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" />
+      </svg>
+      <div>
+        <h1>fullshot</h1>
+        <p class="subtitle">Options &middot; changes save automatically</p>
+      </div>
+    </header>
 
     <section>
       <h2>Default format</h2>
-      <label><input type="radio" name="defaultFormat" value="pdf" /> PDF</label>
-      <label><input type="radio" name="defaultFormat" value="image" /> Image</label>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="defaultFormat" value="pdf" /><span>PDF</span></label>
+        <label class="choice"><input type="radio" name="defaultFormat" value="image" /><span>Image</span></label>
+      </div>
       <p class="hint">Used by Alt+Shift+S and the "default" popup action.</p>
     </section>
 
     <section>
       <h2>PDF mode</h2>
-      <label><input type="radio" name="pdfMode" value="claude" /> Claude PDF (tiled, searchable text layer)</label>
-      <label><input type="radio" name="pdfMode" value="vector" /> Vector PDF (experimental, native print-to-PDF)</label>
+      <div class="choices stack">
+        <label class="choice card-choice">
+          <input type="radio" name="pdfMode" value="claude" />
+          <span class="choice-body">
+            <span class="choice-title">Claude PDF</span>
+            <span class="choice-desc">Tiled, with a searchable text layer</span>
+          </span>
+        </label>
+        <label class="choice card-choice">
+          <input type="radio" name="pdfMode" value="vector" />
+          <span class="choice-body">
+            <span class="choice-title">Vector PDF <span class="badge">experimental</span></span>
+            <span class="choice-desc">Native print-to-PDF</span>
+          </span>
+        </label>
+      </div>
     </section>
 
     <section>
       <h2>Image format</h2>
-      <label><input type="radio" name="imageFormat" value="png" /> PNG</label>
-      <label><input type="radio" name="imageFormat" value="jpeg" /> JPEG</label>
-      <label id="jpeg-quality-row">
-        Quality
-        <input type="number" id="jpegQuality" min="1" max="100" step="1" />
-      </label>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="imageFormat" value="png" /><span>PNG</span></label>
+        <label class="choice"><input type="radio" name="imageFormat" value="jpeg" /><span>JPEG</span></label>
+        <label id="jpeg-quality-row" class="inline-field">
+          Quality
+          <input type="number" id="jpegQuality" min="1" max="100" step="1" />
+        </label>
+      </div>
       <p class="hint">The clipboard copy is always PNG — some browsers can't paste JPEG.</p>
     </section>
 
@@ -39,28 +66,37 @@
         <input type="text" id="baseFolder" />
       </label>
 
-      <label><input type="radio" name="subfolders" value="none" /> No subfolders</label>
-      <label><input type="radio" name="subfolders" value="month" /> By month</label>
-      <label><input type="radio" name="subfolders" value="domain" /> By domain</label>
+      <p class="field-label">Subfolders</p>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="subfolders" value="none" /><span>None</span></label>
+        <label class="choice"><input type="radio" name="subfolders" value="month" /><span>By month</span></label>
+        <label class="choice"><input type="radio" name="subfolders" value="domain" /><span>By domain</span></label>
+      </div>
 
-      <label><input type="checkbox" id="alsoSaveTiles" /> Also save Claude-sized tiles (Image mode)</label>
+      <label class="check"><input type="checkbox" id="alsoSaveTiles" /> Also save Claude-sized tiles (Image mode)</label>
     </section>
 
     <section>
       <h2>Filename</h2>
-      <label><input type="radio" name="filenamePreset" value="domain_date_title" /> domain_date_title</label>
-      <label><input type="radio" name="filenamePreset" value="title_date" /> title_date</label>
-      <label><input type="radio" name="filenamePreset" value="date_domain" /> date_domain</label>
-      <label><input type="radio" name="filenamePreset" value="custom" /> Custom</label>
+      <div class="choices">
+        <label class="choice mono"><input type="radio" name="filenamePreset" value="domain_date_title" /><span>domain_date_title</span></label>
+        <label class="choice mono"><input type="radio" name="filenamePreset" value="title_date" /><span>title_date</span></label>
+        <label class="choice mono"><input type="radio" name="filenamePreset" value="date_domain" /><span>date_domain</span></label>
+        <label class="choice"><input type="radio" name="filenamePreset" value="custom" /><span>Custom</span></label>
+      </div>
 
       <label class="block" id="custom-template-row">
         Template
         <input type="text" id="customTemplate" />
         <span class="hint">Tokens: {domain} {title} {date} {time}</span>
       </label>
+
+      <div class="preview">
+        <span class="preview-label">Example</span>
+        <code id="preview"></code>
+      </div>
     </section>
 
-    <p class="preview">Example: <code id="preview"></code></p>
     <p id="saved-indicator" class="saved-indicator"></p>
 
     <script type="module" src="options.js"></script>
