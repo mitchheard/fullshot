@@ -7,15 +7,48 @@
   </head>
   <body>
     <div class="header">
-      <span class="title">fullshot</span>
-      <button id="gear" title="Options" aria-label="Options">⚙</button>
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3" />
+        </svg>
+        <span class="title">fullshot</span>
+      </div>
+      <button id="gear" title="Options" aria-label="Options">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      </button>
     </div>
+
     <div class="buttons">
-      <button id="btn-pdf" class="capture-btn">PDF</button>
-      <button id="btn-image" class="capture-btn">Image</button>
-      <button id="btn-copy" class="capture-btn" title="Copy a full-page PNG to the clipboard without saving a file">Copy</button>
+      <button id="btn-pdf" class="capture-btn" title="Save the full page as a PDF">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+          <path d="M14 3v5h5M9 13h6M9 17h6" />
+        </svg>
+        <span class="label">PDF</span>
+        <span class="caption">Save file</span>
+      </button>
+      <button id="btn-image" class="capture-btn" title="Save the full page as an image">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
+        <span class="label">Image</span>
+        <span class="caption">Save file</span>
+      </button>
+      <button id="btn-copy" class="capture-btn" title="Copy a full-page PNG to the clipboard without saving a file">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="9" y="9" width="12" height="12" rx="2" />
+          <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+        </svg>
+        <span class="label">Copy</span>
+        <span class="caption">Clipboard</span>
+      </button>
     </div>
-    <p id="status" class="status"></p>
+    <p id="status" class="status" hidden></p>
     <script src="popup.js"></script>
   </body>
 </html>
