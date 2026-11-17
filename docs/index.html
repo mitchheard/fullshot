@@ -872,20 +872,196 @@
 
       .steps li {
         position: relative;
-        padding: 30px 26px 28px;
+        padding: 14px 14px 26px;
         background: var(--bg);
         border: 1px solid var(--line);
         border-radius: 18px;
-        counter-increment: step;
       }
 
-      .steps li::before {
-        content: counter(step, decimal-leading-zero);
+      .step-num {
         display: block;
-        margin-bottom: 20px;
-        font: 500 3rem/1 var(--serif);
-        letter-spacing: -0.04em;
+        margin: 0 12px 8px;
+        font: 500 12px var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         color: var(--accent-text);
+      }
+
+      .steps h3,
+      .steps p {
+        margin-inline: 12px;
+      }
+
+      /* Step illustrations */
+      .step-art {
+        position: relative;
+        display: grid;
+        place-items: center;
+        height: 156px;
+        margin-bottom: 22px;
+        overflow: hidden;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      .step-art svg.zip {
+        width: 100%;
+        max-width: 240px;
+        height: auto;
+      }
+
+      .zip .shape {
+        fill: var(--bg-3);
+        stroke: var(--muted);
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+      }
+
+      .zip .folder {
+        fill: var(--accent-soft);
+        stroke: var(--accent-text);
+      }
+
+      .zip .zipper {
+        fill: var(--muted);
+      }
+
+      .zip .arrow {
+        fill: none;
+        stroke: var(--accent-text);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .zip text {
+        font: 600 10px var(--mono);
+        fill: var(--muted);
+        text-anchor: middle;
+      }
+
+      .zip text.on {
+        fill: var(--accent-text);
+      }
+
+      /* Mini chrome://extensions */
+      .ext-mock {
+        width: calc(100% - 28px);
+        max-width: 300px;
+        padding: 12px;
+        font: 500 11px var(--sans);
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.5);
+      }
+
+      .ext-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .ext-top b {
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .dev-mode {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .toggle {
+        position: relative;
+        width: 26px;
+        height: 14px;
+        background: var(--accent);
+        border-radius: 999px;
+      }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+      }
+
+      .ext-btns {
+        display: flex;
+        gap: 6px;
+      }
+
+      .ext-btns span {
+        padding: 5px 9px;
+        white-space: nowrap;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+
+      .ext-btns span.hit {
+        position: relative;
+        color: var(--accent-text);
+        font-weight: 600;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .cursor {
+        position: absolute;
+        right: -10px;
+        bottom: -16px;
+        width: 16px;
+        height: 18px;
+        fill: var(--text);
+        stroke: var(--bg);
+        stroke-width: 1.2;
+        stroke-linejoin: round;
+      }
+
+      /* Keycaps */
+      .caps {
+        display: flex;
+        gap: 10px;
+      }
+
+      .cap {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        font: 600 22px var(--sans);
+        color: var(--text);
+        background: var(--bg-3);
+        border: 1px solid var(--line);
+        border-bottom-width: 4px;
+        border-radius: 10px;
+      }
+
+      .cap.go {
+        color: #fff;
+        background: var(--accent);
+        border-color: var(--accent-hover, #4338ca);
+        border-bottom-color: #3730a3;
+        box-shadow: 0 10px 24px -8px var(--accent-glow);
+      }
+
+      .combo {
+        white-space: nowrap;
       }
 
       .steps h3 {
@@ -894,7 +1070,7 @@
       }
 
       .steps p {
-        margin: 0;
+        margin: 0 12px;
         font-size: 15px;
         color: var(--muted);
       }
@@ -1365,16 +1541,59 @@
 
           <ol class="steps">
             <li class="reveal">
+              <div class="step-art" aria-hidden="true">
+                <svg class="zip" viewBox="0 0 240 110">
+                  <path class="shape" d="M42 14h30l16 16v50a4 4 0 0 1-4 4H42a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" />
+                  <path class="shape" d="M72 14v12a4 4 0 0 0 4 4h12" />
+                  <rect class="zipper" x="56" y="22" width="6" height="4" rx="1" />
+                  <rect class="zipper" x="60" y="28" width="6" height="4" rx="1" />
+                  <rect class="zipper" x="56" y="34" width="6" height="4" rx="1" />
+                  <rect class="zipper" x="60" y="40" width="6" height="4" rx="1" />
+                  <rect class="zipper" x="55" y="48" width="12" height="14" rx="2" />
+                  <text x="63" y="102">main.zip</text>
+                  <path class="arrow" d="M104 50h32M128 42l8 8-8 8" />
+                  <path class="shape folder" d="M152 26a4 4 0 0 1 4-4h18l7 8h23a4 4 0 0 1 4 4v42a4 4 0 0 1-4 4h-48a4 4 0 0 1-4-4z" />
+                  <text class="on" x="180" y="102">fullshot/</text>
+                </svg>
+              </div>
+              <span class="step-num">Step 01</span>
               <h3>Download</h3>
               <p>Grab the ZIP from GitHub and unzip it, or clone the repo. You'll get a <code>fullshot</code> folder.</p>
             </li>
             <li class="reveal" style="transition-delay: 90ms">
+              <div class="step-art" aria-hidden="true">
+                <div class="ext-mock">
+                  <div class="ext-top">
+                    <b>Extensions</b>
+                    <span class="dev-mode">Developer mode <i class="toggle"></i></span>
+                  </div>
+                  <div class="ext-btns">
+                    <span class="hit">
+                      Load unpacked
+                      <svg class="cursor" viewBox="0 0 16 18"><path d="M1 1l13 7.5-5.5 1.5L6 16z" /></svg>
+                    </span>
+                    <span>Pack extension</span>
+                  </div>
+                </div>
+              </div>
+              <span class="step-num">Step 02</span>
               <h3>Load unpacked</h3>
               <p>Open <code>chrome://extensions</code>, switch on <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and pick the folder.</p>
             </li>
             <li class="reveal" style="transition-delay: 180ms">
+              <div class="step-art" aria-hidden="true">
+                <div class="caps">
+                  <span class="cap">⌘</span>
+                  <span class="cap">⇧</span>
+                  <span class="cap go">S</span>
+                </div>
+              </div>
+              <span class="step-num">Step 03</span>
               <h3>Capture</h3>
-              <p>Pin the icon, then press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>S</kbd> (<kbd>Alt</kbd><kbd>Shift</kbd><kbd>S</kbd> on Windows and Linux) on any page.</p>
+              <p>
+                Pin the icon, then press <span class="combo"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>S</kbd></span> on any page.
+                On Windows and Linux it's <span class="combo"><kbd>Alt</kbd><kbd>Shift</kbd><kbd>S</kbd></span>.
+              </p>
             </li>
           </ol>
 
